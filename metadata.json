@@ -1,0 +1,7 @@
+{
+  "name": "澳洲出海服务中心 - 官网",
+  "description": "数贸融旗下品牌，专注于中澳跨境贸易本土化全链路赋能，提供战略入市、合规落地、本地化营销及持续增长服务。",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
