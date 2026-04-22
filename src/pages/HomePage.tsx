@@ -1,0 +1,166 @@
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import { Navbar } from '../components/Public/Navbar';
+import { Hero } from '../components/Public/Hero';
+import { PainPoints } from '../components/Public/PainPoints';
+import { Services } from '../components/Public/Services';
+import { Industries, About, Contact, Footer } from '../components/Public/Layout';
+import { ShieldCheck, Users, TrendingUp, Building2, Globe } from 'lucide-react';
+import { safeJsonParse } from '../lib/utils';
+
+const DEFAULT_CONFIG = {
+  hero_title: '让中国企业在澳洲\n真正落地与增长',
+  hero_subtitle: '从合规准入到商业策略，我们填补“落地后增长赋能”的市场空白，担任您的外部首席增长官（CGO），助您在澳洲市场扎根。',
+  contact_email: 'info@digitradefintech.com',
+  contact_phone: '+61 (07) 1234 5678 / +86 123 4567 8910',
+  contact_form_text: '填写右侧表单，我们的中澳专家团队将为您提供免费的初步咨询和合规风险评估。',
+  contact_form_fields: JSON.stringify([
+    { name: 'company', label: '公司名称', placeholder: '您的公司全名', type: 'text', required: true },
+    { name: 'industry', label: '所属行业', placeholder: '如：新能源、贸易、基建', type: 'text', required: true },
+    { name: 'email', label: '电子邮箱', placeholder: 'email@example.com', type: 'email', required: true },
+    { name: 'needs', label: '核心诉求', placeholder: '请简述您的服务需求', type: 'textarea', required: false }
+  ]),
+  industries: JSON.stringify([
+    { id: 'energy', name: '新能源与关键矿产', description: '锂电产业链、储能技术及绿色金属转型。', image: 'https://images.unsplash.com/photo-1466611653911-95282fc3656b?auto=format&fit=crop&q=80&w=800' },
+    { id: 'agri', name: '农业与食品科技', description: '高质量食品出口、农业科技与生物科技。', image: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&q=80&w=800' },
+    { id: 'construction', name: '建筑与装配式', description: '住宅建设、交通基建及装配式建筑方案。', image: 'https://images.unsplash.com/photo-1541888946425-d81bb19480c5?auto=format&fit=crop&q=80&w=800' },
+  ]),
+  about_title: '您的澳洲落地与增量\n战略级合伙人',
+  about_content: '数贸融（Digitrade Fintech）是一家专注于为中国企业提供澳洲全链路出海赋能的咨询服务体系。我们不同于传统的法务或财税代办机构，我们深耕“落地后的增长赋能”。\n\n我们的核心团队由深耕澳洲市场多年的连续创业者、前政府高级顾问及资深行业专家组成，拥有强大的本地政企资源网。我们致力于通过“产品化”的服务体系，让出海变得可预测、可持续、可盈利。',
+  pain_points: JSON.stringify([
+    { title: '信息不透明', desc: '不清楚澳洲市场准入规则，不了解注册、税务、签证等复杂流程。', more: '在澳洲，ABN注册、GST税务申报、ASIC合规要求等都与国内显著不同。缺乏本地向导极易导致合规性风险，甚至面临巨额罚款。', icon: 'Search' },
+    { title: '落地执行难', desc: '不知道如何注册公司、招聘人才、寻找本地供应链和资源。', more: '澳洲的劳动力成本极高， Fair Work 法规严格。如何在不熟悉的市场建立信任，筛选真正优质的本地供应商，是企业面临的第一个执行难题。', icon: 'MapPin' },
+    { title: '增长瓶颈大', desc: '产品卖不出去，品牌不被认可，缺乏本地化运营能力和渠道。', icon: 'TrendingUp', more: '出海不只是翻译文字。文化内核、消费习惯、媒体矩阵的巨大差异，使得传统的“中国模式”在澳洲往往失效。需要深度本地运营才能实现品牌心智占领。' },
+    { title: '服务严重割裂', desc: '咨询公司只讲战略，代办机构只做执行，没有人覆盖全流程。', icon: 'Briefcase', more: 'Digitrade 整合了顶层商业设计到落地合规执行的闭环。我们不只给你报告，我们与您并肩走进市场，解决从0到1的每一个细节问题。' },
+  ])
+};
+
+const DEFAULT_PRODUCTS = [
+  { id: 1, title: '战略入市服务', description: '解决赴澳初期最紧迫的基础挑战，建立合法运营实体。', price: '$3,800+', image_url: 'strategy', stage: '第一阶段：快速变现', features: ["市场调研报告", "商业模式设计", "合规路径规划", "公司注册与税务登记"] },
+  { id: 2, title: '本地化运营服务', description: '解决深层次运营挑战，实现品牌在澳洲的真正扎根。', price: '$5,000+', image_url: 'localization', stage: '第二阶段：增长型产品', features: ["品牌本地化改造", "数字营销全案", "渠道建设与对接", "人才招聘与管理"] },
+  { id: 3, title: '增长赋能服务', description: '深度聚焦重点产业，助力企业实现从落地到扎根的质变。', price: '项目制', image_url: 'growth', stage: '第三阶段：高价值产品', features: ["政府资源嫁接", "产业基金申请支持", "财税外包服务", "战略合作撮合"] }
+];
+
+export const HomePage = () => {
+  const [siteConfig, setSiteConfig] = useState<any>(DEFAULT_CONFIG);
+  const [products, setProducts] = useState<any[]>(DEFAULT_PRODUCTS);
+  const [loading, setLoading] = useState(true);
+  const [isConfigured, setIsConfigured] = useState(true);
+
+  useEffect(() => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'https://your-project.supabase.co') {
+      setIsConfigured(false);
+      setLoading(false);
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        const { data: configData, error: configError } = await supabase.from('site_config').select('*');
+        const { data: productsData, error: productsError } = await supabase.from('products').select('*').order('id');
+
+        if (configError || productsError) {
+          console.warn('Supabase fetch failed, using defaults:', configError || productsError);
+          setLoading(false);
+          return;
+        }
+
+        if (configData && configData.length > 0) {
+          const configObj = configData.reduce((acc: any, item: any) => {
+            acc[item.key] = item.value;
+            return acc;
+          }, {});
+          setSiteConfig(configObj);
+        }
+
+        if (productsData && productsData.length > 0) {
+          setProducts(productsData);
+        }
+      } catch (error) {
+        console.error('Error fetching site data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const steps = [
+    { title: '进入市场', desc: 'Entry', icon: <Globe className="w-5 h-5" /> },
+    { title: '合规落地', desc: 'Setup', icon: <ShieldCheck className="w-5 h-5" /> },
+    { title: '本地运营', desc: 'Operate', icon: <Users className="w-5 h-5" /> },
+    { title: '增长加速', desc: 'Scale', icon: <TrendingUp className="w-5 h-5" /> },
+    { title: '产业嵌入', desc: 'Integrate', icon: <Building2 className="w-5 h-5" /> },
+  ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
+      {!isConfigured && (
+        <div className="bg-amber-50 border-b border-amber-100 p-4 text-center sticky top-0 z-[60]">
+          <p className="text-amber-800 text-sm font-medium">
+            ⚠️ 演示模式：Supabase 未配置。请在 AI Studio 填写环境变量方可开启管理后台。
+          </p>
+        </div>
+      )}
+      <Navbar 
+        logoText={siteConfig.company_logo_text}
+        links={safeJsonParse(siteConfig.navbar_links)}
+      />
+      <main>
+        <Hero 
+          title={siteConfig.hero_title} 
+          subtitle={siteConfig.hero_subtitle} 
+          bgImage={siteConfig.hero_image_url}
+          btn1Text={siteConfig.hero_btn_1_text}
+          btn2Text={siteConfig.hero_btn_2_text}
+        />
+        <PainPoints data={safeJsonParse(siteConfig.pain_points)} />
+        <Services products={products} />
+        <Industries data={safeJsonParse(siteConfig.industries)} />
+        <About title={siteConfig.about_title} content={siteConfig.about_content} />
+        
+        {/* Service Path Section */}
+        <section id="how-it-works" className="py-24 bg-blue-600">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-20 text-white">
+              <h2 className="text-blue-200 font-bold tracking-widest uppercase text-sm mb-3">服务路径</h2>
+              <p className="text-3xl md:text-4xl font-bold">我们如何帮助企业在澳洲成功？</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-12 relative">
+              {steps.map((step, idx) => (
+                <div key={step.title} className="text-center">
+                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 text-blue-600 shadow-xl">
+                    {step.icon}
+                  </div>
+                  <div className="text-blue-100 text-xs font-bold uppercase tracking-widest mb-2 font-mono">Step {idx + 1}</div>
+                  <h3 className="text-xl font-bold text-white mb-2">{step.title}</h3>
+                  <p className="text-blue-200 text-sm">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <Contact 
+          email={siteConfig.contact_email} 
+          phone={siteConfig.contact_phone} 
+          formText={siteConfig.contact_form_text}
+          formFields={safeJsonParse(siteConfig.contact_form_fields)}
+        />
+      </main>
+      <Footer />
+    </div>
+  );
+};
