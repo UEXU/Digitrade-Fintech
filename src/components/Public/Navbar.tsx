@@ -48,7 +48,13 @@ export const Navbar = ({ logoText, links }: { logoText?: string; links?: any[] }
               {link.name}
             </a>
           ))}
-          <button className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">
+          <button 
+            onClick={() => {
+              const el = document.getElementById('contact');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
+          >
             获取方案
           </button>
         </div>
@@ -82,7 +88,16 @@ export const Navbar = ({ logoText, links }: { logoText?: string; links?: any[] }
                   {link.name}
                 </a>
               ))}
-              <button className="bg-blue-600 text-white w-full py-3 rounded-xl font-semibold">
+              <button 
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setTimeout(() => {
+                    const el = document.getElementById('contact');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }}
+                className="bg-blue-600 text-white w-full py-3 rounded-xl font-semibold"
+              >
                 获取方案
               </button>
             </div>

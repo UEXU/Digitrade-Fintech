@@ -107,13 +107,6 @@ export const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
-      {!isConfigured && (
-        <div className="bg-amber-50 border-b border-amber-100 p-4 text-center sticky top-0 z-[60]">
-          <p className="text-amber-800 text-sm font-medium">
-            ⚠️ 演示模式：Supabase 未配置。请在 AI Studio 填写环境变量方可开启管理后台。
-          </p>
-        </div>
-      )}
       <Navbar 
         logoText={siteConfig.company_logo_text}
         links={safeJsonParse(siteConfig.navbar_links)}

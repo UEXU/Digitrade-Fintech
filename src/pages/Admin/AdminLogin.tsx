@@ -15,13 +15,23 @@ export const AdminLogin = () => {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
-      setError(error.message);
+      if (error) {
+        setError(error.message);
+      } else {
+        navigate('/admin');
+      }
+    } catch (err: any) {
+      console.error('Login error:', err);
+      if (err.message === 'Failed to fetch' || isUnconfigured) {
+        setError('登录请求失败：Supabase 配置无效。请确保已在 Vercel 或 AI Studio 的环境变量中正确配置 VITE_SUPABASE_URL 和 VITE_SUPABASE_ANON_KEY。');
+      } else {
+        setError('系统错误，请检查网络连接或配置。');
+      }
+    } finally {
       setLoading(false);
-    } else {
-      navigate('/admin');
     }
   };
 
