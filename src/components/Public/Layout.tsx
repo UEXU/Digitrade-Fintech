@@ -271,7 +271,7 @@ export const Footer = ({
                 {logoText ? logoText.substring(0, 1) : '数'}
               </div>
             )}
-            <div className="flex flex-col -ml-10 mt-1">
+            <div className="flex flex-col -ml-10 mt-1 whitespace-nowrap">
               <span className="font-bold text-lg leading-tight tracking-tight">{logoText || '数贸融出海服务'}</span>
               <span className="text-[10px] font-medium tracking-wider uppercase text-gray-400 opacity-80">
                 {logoSubtitle || 'Digitrade Fintech'}

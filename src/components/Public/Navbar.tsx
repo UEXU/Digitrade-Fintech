@@ -38,7 +38,7 @@ export const Navbar = ({ logoText, logoSubtitle, logoUrl, links }: { logoText?: 
               {logoText ? logoText.substring(0, 1) : '数'}
             </div>
           )}
-          <div className="flex flex-col -ml-10 mt-1 md:mt-2">
+          <div className="flex flex-col -ml-10 mt-1 md:mt-2 whitespace-nowrap">
             <span className={`font-bold text-base md:text-lg leading-tight tracking-tight ${isScrolled ? 'text-gray-900' : 'text-white'}`}>
               {logoText || '数贸融出海服务'}
             </span>
