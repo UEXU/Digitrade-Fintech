@@ -9,11 +9,16 @@ import { ShieldCheck, Users, TrendingUp, Building2, Globe } from 'lucide-react';
 import { safeJsonParse } from '../lib/utils';
 
 const DEFAULT_CONFIG = {
+  company_logo_text: '数贸融澳洲出海服务中心',
+  company_logo_subtitle: 'DIGITRADE FINTECH',
   hero_title: '让中国企业在澳洲\n真正落地与增长',
   hero_subtitle: '从合规准入到商业策略，我们填补“落地后增长赋能”的市场空白，担任您的外部首席增长官（CGO），助您在澳洲市场扎根。',
   contact_email: 'info@digitradefintech.com',
   contact_phone: '+61 (07) 1234 5678 / +86 123 4567 8910',
+  contact_title: '联系我们',
+  contact_heading: '开启您的澳洲出海之旅',
   contact_form_text: '填写右侧表单，我们的中澳专家团队将为您提供免费的初步咨询和合规风险评估。',
+  logo_url: 'https://svgshare.com/i/15A_.svg',
   contact_form_fields: JSON.stringify([
     { name: 'company', label: '公司名称', placeholder: '您的公司全名', type: 'text', required: true },
     { name: 'industry', label: '所属行业', placeholder: '如：新能源、贸易、基建', type: 'text', required: true },
@@ -46,6 +51,14 @@ export const HomePage = () => {
   const [products, setProducts] = useState<any[]>(DEFAULT_PRODUCTS);
   const [loading, setLoading] = useState(true);
   const [isConfigured, setIsConfigured] = useState(true);
+
+  const steps = safeJsonParse(siteConfig.service_steps, [
+    { title: '进入市场', desc: 'Entry', icon: <Globe className="w-5 h-5" /> },
+    { title: '合规落地', desc: 'Setup', icon: <ShieldCheck className="w-5 h-5" /> },
+    { title: '本地运营', desc: 'Operate', icon: <Users className="w-5 h-5" /> },
+    { title: '增长加速', desc: 'Scale', icon: <TrendingUp className="w-5 h-5" /> },
+    { title: '产业嵌入', desc: 'Integrate', icon: <Building2 className="w-5 h-5" /> },
+  ]);
 
   useEffect(() => {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -89,14 +102,6 @@ export const HomePage = () => {
     fetchData();
   }, []);
 
-  const steps = [
-    { title: '进入市场', desc: 'Entry', icon: <Globe className="w-5 h-5" /> },
-    { title: '合规落地', desc: 'Setup', icon: <ShieldCheck className="w-5 h-5" /> },
-    { title: '本地运营', desc: 'Operate', icon: <Users className="w-5 h-5" /> },
-    { title: '增长加速', desc: 'Scale', icon: <TrendingUp className="w-5 h-5" /> },
-    { title: '产业嵌入', desc: 'Integrate', icon: <Building2 className="w-5 h-5" /> },
-  ];
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -109,6 +114,8 @@ export const HomePage = () => {
     <div className="min-h-screen bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
       <Navbar 
         logoText={siteConfig.company_logo_text}
+        logoSubtitle={siteConfig.company_logo_subtitle}
+        logoUrl={siteConfig.logo_url}
         links={safeJsonParse(siteConfig.navbar_links)}
       />
       <main>
@@ -121,21 +128,41 @@ export const HomePage = () => {
         />
         <PainPoints data={safeJsonParse(siteConfig.pain_points)} />
         <Services products={products} />
-        <Industries data={safeJsonParse(siteConfig.industries)} />
-        <About title={siteConfig.about_title} content={siteConfig.about_content} />
+        <Industries 
+          data={safeJsonParse(siteConfig.industries)} 
+          title={siteConfig.industries_title}
+          heading={siteConfig.industries_heading}
+        />
+        <About 
+          title={siteConfig.about_title} 
+          content={siteConfig.about_content}
+          p1Title={siteConfig.about_p1_title}
+          p1Desc={siteConfig.about_p1_desc}
+          p2Title={siteConfig.about_p2_title}
+          p2Desc={siteConfig.about_p2_desc}
+        />
         
         {/* Service Path Section */}
         <section id="how-it-works" className="py-24 bg-blue-600">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-20 text-white">
-              <h2 className="text-blue-200 font-bold tracking-widest uppercase text-sm mb-3">服务路径</h2>
-              <p className="text-3xl md:text-4xl font-bold">我们如何帮助企业在澳洲成功？</p>
+              <h2 className="text-blue-200 font-bold tracking-widest uppercase text-sm mb-3">
+                {siteConfig.service_path_title || '服务路径'}
+              </h2>
+              <p className="text-3xl md:text-4xl font-bold">
+                {siteConfig.service_path_heading || '我们如何帮助企业在澳洲成功？'}
+              </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-12 relative">
-              {steps.map((step, idx) => (
+              {steps.map((step: any, idx: number) => (
                 <div key={step.title} className="text-center">
                   <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 text-blue-600 shadow-xl">
-                    {step.icon}
+                    {idx === 0 && <Globe className="w-5 h-5" />}
+                    {idx === 1 && <ShieldCheck className="w-5 h-5" />}
+                    {idx === 2 && <Users className="w-5 h-5" />}
+                    {idx === 3 && <TrendingUp className="w-5 h-5" />}
+                    {idx === 4 && <Building2 className="w-5 h-5" />}
+                    {idx > 4 && <Zap className="w-5 h-5" />}
                   </div>
                   <div className="text-blue-100 text-xs font-bold uppercase tracking-widest mb-2 font-mono">Step {idx + 1}</div>
                   <h3 className="text-xl font-bold text-white mb-2">{step.title}</h3>
@@ -147,13 +174,20 @@ export const HomePage = () => {
         </section>
 
         <Contact 
+          title={siteConfig.contact_title}
+          heading={siteConfig.contact_heading}
           email={siteConfig.contact_email} 
           phone={siteConfig.contact_phone} 
           formText={siteConfig.contact_form_text}
           formFields={safeJsonParse(siteConfig.contact_form_fields)}
         />
       </main>
-      <Footer />
+      <Footer 
+        logoText={siteConfig.company_logo_text} 
+        logoSubtitle={siteConfig.company_logo_subtitle}
+        logoUrl={siteConfig.logo_url} 
+        description={siteConfig.footer_description}
+      />
     </div>
   );
 };

@@ -37,6 +37,8 @@ export const ProductMatrix = () => {
     <div className="min-h-screen bg-slate-50">
       <Navbar 
         logoText={siteConfig.company_logo_text}
+        logoSubtitle={siteConfig.company_logo_subtitle}
+        logoUrl={siteConfig.logo_url}
         links={safeJsonParse(siteConfig.navbar_links)}
       />
       
@@ -112,7 +114,11 @@ export const ProductMatrix = () => {
         </div>
       </section>
 
-      <Footer />
+      <Footer 
+        logoText={siteConfig.company_logo_text} 
+        logoSubtitle={siteConfig.company_logo_subtitle}
+        logoUrl={siteConfig.logo_url} 
+      />
     </div>
   );
 };

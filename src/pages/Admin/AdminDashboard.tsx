@@ -28,7 +28,7 @@ export const AdminDashboard = () => {
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'navbar' | 'hero' | 'about' | 'products' | 'industries' | 'contact' | 'pain-points' | 'leads'>('navbar');
+  const [activeTab, setActiveTab] = useState<'navbar' | 'hero' | 'about' | 'service-path' | 'products' | 'industries' | 'contact' | 'pain-points' | 'leads'>('navbar');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -114,6 +114,13 @@ export const AdminDashboard = () => {
     { name: 'industry', label: '所属行业', placeholder: '所属行业', type: 'text', required: true },
     { name: 'email', label: '电子邮箱', placeholder: 'email@example.com', type: 'email', required: true },
   ]);
+  const currentServiceSteps = getConfig('service_steps', [
+    { title: '进入市场', desc: 'Entry' },
+    { title: '合规落地', desc: 'Setup' },
+    { title: '本地运营', desc: 'Operate' },
+    { title: '增长加速', desc: 'Scale' },
+    { title: '产业嵌入', desc: 'Integrate' },
+  ]);
 
   const updateIndustries = (newIndustries: any[]) => {
     handleUpdateConfig('industries', newIndustries);
@@ -129,6 +136,10 @@ export const AdminDashboard = () => {
 
   const updateFormFields = (newFields: any[]) => {
     handleUpdateConfig('contact_form_fields', newFields);
+  };
+
+  const updateServiceSteps = (newSteps: any[]) => {
+    handleUpdateConfig('service_steps', newSteps);
   };
 
   const addPainPoint = () => {
@@ -191,6 +202,10 @@ export const AdminDashboard = () => {
             <div className="flex items-center gap-3"><Info size={18}/> 关于我们</div>
             <ChevronRight size={14} className={activeTab === 'about' ? 'opacity-100' : 'opacity-0'} />
           </button>
+          <button onClick={() => setActiveTab('service-path')} className={`w-full flex items-center justify-between px-5 py-4 rounded-xl transition-all ${activeTab === 'service-path' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/5'}`}>
+            <div className="flex items-center gap-3"><ChevronRight size={18}/> 服务路径</div>
+            <ChevronRight size={14} className={activeTab === 'service-path' ? 'opacity-100' : 'opacity-0'} />
+          </button>
           <button onClick={() => setActiveTab('pain-points')} className={`w-full flex items-center justify-between px-5 py-4 rounded-xl transition-all ${activeTab === 'pain-points' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/5'}`}>
             <div className="flex items-center gap-3"><Zap size={18}/> 痛点互动</div>
             <ChevronRight size={14} className={activeTab === 'pain-points' ? 'opacity-100' : 'opacity-0'} />
@@ -229,6 +244,7 @@ export const AdminDashboard = () => {
                 {activeTab === 'navbar' && '站点导航与全局配置'}
                 {activeTab === 'hero' && '可视化标题管理'}
                 {activeTab === 'about' && '关于我们页面编辑'}
+                {activeTab === 'service-path' && '服务路径与步骤管理'}
                 {activeTab === 'pain-points' && '核心痛点互动编辑器'}
                 {activeTab === 'products' && '产品矩阵与二级页管理'}
                 {activeTab === 'industries' && '行业解决方案管理'}
@@ -262,8 +278,90 @@ export const AdminDashboard = () => {
                       onChange={(e) => handleUpdateConfig('company_logo_text', e.target.value)}
                     />
                   </div>
+                  <div className="space-y-4 border-t border-slate-50 pt-10">
+                    <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
+                      品牌副标题/英文名称 (Logo副标题)
+                    </label>
+                    <input 
+                      className="w-full px-6 py-5 rounded-3xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none transition-all text-xl font-mono"
+                      placeholder="例如：DIGITRADE FINTECH"
+                      value={siteConfig.company_logo_subtitle || ''}
+                      onChange={(e) => handleUpdateConfig('company_logo_subtitle', e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-4 border-t border-slate-50 pt-10">
+                    <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
+                      <ImageIcon className="text-blue-600 w-4 h-4" /> 公司 Logo 图片
+                    </label>
+                    <div className="w-full min-h-[120px] bg-slate-100 rounded-3xl overflow-hidden mb-4 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-6 transition-all hover:bg-slate-50">
+                      {siteConfig.logo_url ? (
+                        <div className="flex flex-col items-center gap-4 w-full">
+                          <img 
+                            src={siteConfig.logo_url} 
+                            className="max-h-24 w-auto object-contain"
+                            referrerPolicy="no-referrer"
+                          />
+                          <button 
+                            onClick={() => handleUpdateConfig('logo_url', '')}
+                            className="text-xs text-red-500 hover:underline font-medium"
+                          >
+                            移除 Logo 图片
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2">
+                          <span className="text-slate-400 text-xs italic">尚未设置 Logo 图片</span>
+                          <p className="text-[10px] text-slate-500">将显示文字 Logo：{siteConfig.company_logo_text || '数贸融'}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex gap-4">
+                      <div className="flex-grow">
+                        <input 
+                          className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none transition-all font-mono text-xs"
+                          placeholder="输入图片 URL 或点击右侧上传"
+                          value={siteConfig.logo_url || ''}
+                          onChange={(e) => handleUpdateConfig('logo_url', e.target.value)}
+                        />
+                      </div>
+                      <label className="cursor-pointer bg-blue-600 text-white px-6 py-4 rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all flex items-center gap-2 shrink-0 shadow-lg shadow-blue-600/20">
+                        <Plus size={18} />
+                        上传图片
+                        <input 
+                          type="file" 
+                          className="hidden" 
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                handleUpdateConfig('logo_url', reader.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-2">提示：支持 PNG, SVG, JPG。Logo 图片将与品牌名称并排显示。</p>
+                  </div>
                   
-                  <div className="space-y-6">
+                  <div className="space-y-4 border-t border-slate-50 pt-10">
+                    <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
+                      页脚公司简介文字
+                    </label>
+                    <textarea 
+                      className="w-full px-6 py-5 rounded-3xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none transition-all text-sm leading-relaxed"
+                      rows={3}
+                      value={siteConfig.footer_description || '专注于跨境贸易本土化全链路赋能的智能服务中心。我们不仅是服务提供者，更是客户的海外增长合伙人。'}
+                      onChange={(e) => handleUpdateConfig('footer_description', e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-6 border-t border-slate-50 pt-10">
                     <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl">
                        <label className="text-sm font-bold">主导航链接</label>
                        <button 
@@ -391,6 +489,77 @@ export const AdminDashboard = () => {
                     value={siteConfig.about_content || ''}
                     onChange={(e) => handleUpdateConfig('about_content', e.target.value)}
                   />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-8 border-t border-slate-50 pt-10">
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">亮点1 标题</label>
+                    <input className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200" value={siteConfig.about_p1_title || '● 深度本地化'} onChange={(e) => handleUpdateConfig('about_p1_title', e.target.value)} />
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">亮点1 描述</label>
+                    <input className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200" value={siteConfig.about_p1_desc || '不只是翻译，更是品牌灵魂的二次植入。'} onChange={(e) => handleUpdateConfig('about_p1_desc', e.target.value)} />
+                  </div>
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">亮点2 标题</label>
+                    <input className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200" value={siteConfig.about_p2_title || '● 全链路覆盖'} onChange={(e) => handleUpdateConfig('about_p2_title', e.target.value)} />
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">亮点2 描述</label>
+                    <input className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200" value={siteConfig.about_p2_desc || '从0到1的冷启动，到1到10的规模化增长。'} onChange={(e) => handleUpdateConfig('about_p2_desc', e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SERVICE PATH TAB */}
+            {activeTab === 'service-path' && (
+              <div className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 space-y-10">
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">板块小标题</label>
+                    <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200" value={siteConfig.service_path_title || '服务路径'} onChange={(e) => handleUpdateConfig('service_path_title', e.target.value)} />
+                  </div>
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">板块主标题</label>
+                    <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200" value={siteConfig.service_path_heading || '我们如何帮助企业在澳洲成功？'} onChange={(e) => handleUpdateConfig('service_path_heading', e.target.value)} />
+                  </div>
+                </div>
+
+                <div className="space-y-6 border-t border-slate-50 pt-10">
+                  <label className="text-sm font-bold">服务步骤 (按顺序排序)</label>
+                  <div className="grid gap-4">
+                    {currentServiceSteps.map((step: any, idx: number) => (
+                      <div key={idx} className="flex flex-col md:flex-row gap-4 bg-slate-50 p-6 rounded-3xl border border-slate-100 group">
+                        <div className="flex items-center gap-4 md:w-1/3">
+                          <div className="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold text-xs shrink-0">{idx + 1}</div>
+                          <input 
+                            className="bg-transparent border-none outline-none font-bold focus:ring-0 w-full"
+                            value={step.title}
+                            onChange={(e) => {
+                              const newList = [...currentServiceSteps];
+                              newList[idx].title = e.target.value;
+                              updateServiceSteps(newList);
+                            }}
+                          />
+                        </div>
+                        <div className="flex-grow">
+                          <input 
+                            className="bg-transparent border-none outline-none text-slate-500 text-sm focus:ring-0 w-full italic"
+                            value={step.desc}
+                            onChange={(e) => {
+                              const newList = [...currentServiceSteps];
+                              newList[idx].desc = e.target.value;
+                              updateServiceSteps(newList);
+                            }}
+                          />
+                        </div>
+                        <button onClick={() => updateServiceSteps(currentServiceSteps.filter((_: any, i: number) => i !== idx))} className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16}/></button>
+                      </div>
+                    ))}
+                    <button 
+                      onClick={() => updateServiceSteps([...currentServiceSteps, { title: '新步骤', desc: 'Step Description' }])}
+                      className="w-full py-4 border-2 border-dashed border-slate-200 rounded-3xl text-slate-400 font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Plus size={18} /> 添加服务步骤
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -542,6 +711,37 @@ export const AdminDashboard = () => {
                   </div>
                   <button onClick={addIndustry} className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold text-sm"><Plus size={18}/> 新增方案</button>
                 </div>
+
+                <div className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 space-y-8">
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">板块小标题</label>
+                      <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200" value={siteConfig.industries_title || '行业解决方案'} onChange={(e) => handleUpdateConfig('industries_title', e.target.value)} />
+                    </div>
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">板块主标题</label>
+                      <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200" value={siteConfig.industries_heading || '深耕昆州战略优势产业'} onChange={(e) => handleUpdateConfig('industries_heading', e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="space-y-4 border-t border-slate-50 pt-8">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-4">详情页通用配置：核心赋能维度 (3项)</label>
+                    <div className="grid md:grid-cols-3 gap-6">
+                      <div className="p-6 bg-slate-50 rounded-3xl space-y-4">
+                        <input className="w-full font-bold bg-transparent border-b border-slate-200 focus:border-blue-500 outline-none" value={siteConfig.ind_feat1_title || '快速准入'} onChange={(e) => handleUpdateConfig('ind_feat1_title', e.target.value)} />
+                        <textarea className="w-full text-xs text-slate-500 bg-transparent border-none outline-none focus:ring-0" rows={2} value={siteConfig.ind_feat1_desc || '协助完成行业相关的资质认证与合规审查。'} onChange={(e) => handleUpdateConfig('ind_feat1_desc', e.target.value)} />
+                      </div>
+                      <div className="p-6 bg-slate-50 rounded-3xl space-y-4">
+                        <input className="w-full font-bold bg-transparent border-b border-slate-200 focus:border-blue-500 outline-none" value={siteConfig.ind_feat2_title || '当地资源'} onChange={(e) => handleUpdateConfig('ind_feat2_title', e.target.value)} />
+                        <textarea className="w-full text-xs text-slate-500 bg-transparent border-none outline-none focus:ring-0" rows={2} value={siteConfig.ind_feat2_desc || '对接澳洲本土核心产业公会与政府监管机构。'} onChange={(e) => handleUpdateConfig('ind_feat2_desc', e.target.value)} />
+                      </div>
+                      <div className="p-6 bg-slate-50 rounded-3xl space-y-4">
+                        <input className="w-full font-bold bg-transparent border-b border-slate-200 focus:border-blue-500 outline-none" value={siteConfig.ind_feat3_title || '合规风控'} onChange={(e) => handleUpdateConfig('ind_feat3_title', e.target.value)} />
+                        <textarea className="w-full text-xs text-slate-500 bg-transparent border-none outline-none focus:ring-0" rows={2} value={siteConfig.ind_feat3_desc || '提供澳洲法律框架下的全方位合规咨询。'} onChange={(e) => handleUpdateConfig('ind_feat3_desc', e.target.value)} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {currentIndustries.map((item: any, idx: number) => (
                   <div key={idx} className="bg-white rounded-[40px] p-8 shadow-sm border border-slate-100 relative group animate-in fade-in slide-in-from-right-4">
                     <button onClick={() => deleteIndustry(idx)} className="absolute top-6 right-6 p-3 text-slate-300 hover:text-red-500 transition-colors bg-slate-50 rounded-2xl opacity-0 group-hover:opacity-100"><Trash2 size={20} /></button>
@@ -585,6 +785,16 @@ export const AdminDashboard = () => {
             {activeTab === 'contact' && (
               <div className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 max-w-4xl mx-auto space-y-10 font-sans">
                 <div className="grid md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">联系板块小标题 (Title)</label>
+                    <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none text-lg font-bold text-blue-600" value={siteConfig.contact_title || ''} onChange={(e) => handleUpdateConfig('contact_title', e.target.value)} />
+                  </div>
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">联系板块大标题 (Heading)</label>
+                    <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none text-lg font-bold" value={siteConfig.contact_heading || ''} onChange={(e) => handleUpdateConfig('contact_heading', e.target.value)} />
+                  </div>
+                </div>
+                <div className="grid md:grid-cols-2 gap-8 border-t border-slate-50 pt-10">
                   <div className="space-y-4">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">服务邮箱</label>
                     <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none text-lg" value={siteConfig.contact_email || ''} onChange={(e) => handleUpdateConfig('contact_email', e.target.value)} />

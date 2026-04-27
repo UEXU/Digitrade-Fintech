@@ -3,7 +3,7 @@ import { ArrowRight, Mail, Phone, MapPin, Globe, MessageSquare } from 'lucide-re
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 
-export const Industries = ({ data }: { data?: any[] }) => {
+export const Industries = ({ data, title, heading }: { data?: any[]; title?: string; heading?: string }) => {
   const defaultIndustries = [
     { id: 'energy', name: '新能源与关键矿产', description: '锂电产业链、储能技术及绿色金属转型。', image: 'https://images.unsplash.com/photo-1466611653911-95282fc3656b?auto=format&fit=crop&q=80&w=800' },
     { id: 'agri', name: '农业与食品科技', description: '高质量食品出口、农业科技与生物科技。', image: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&q=80&w=800' },
@@ -16,8 +16,12 @@ export const Industries = ({ data }: { data?: any[] }) => {
     <section id="industries" className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-blue-600 font-bold tracking-widest uppercase text-sm mb-3">行业解决方案</h2>
-          <p className="text-3xl md:text-4xl font-bold text-gray-900">深耕昆州战略优势产业</p>
+          <h2 className="text-blue-600 font-bold tracking-widest uppercase text-sm mb-3">
+            {title || '行业解决方案'}
+          </h2>
+          <p className="text-3xl md:text-4xl font-bold text-gray-900">
+            {heading || '深耕昆州战略优势产业'}
+          </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -48,7 +52,21 @@ export const Industries = ({ data }: { data?: any[] }) => {
   );
 };
 
-export const About = ({ title, content }: { title?: string; content?: string }) => {
+export const About = ({ 
+  title, 
+  content,
+  p1Title,
+  p1Desc,
+  p2Title,
+  p2Desc
+}: { 
+  title?: string; 
+  content?: string;
+  p1Title?: string;
+  p1Desc?: string;
+  p2Title?: string;
+  p2Desc?: string;
+}) => {
   return (
     <section id="about" className="py-24 bg-slate-50 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -72,7 +90,7 @@ export const About = ({ title, content }: { title?: string; content?: string }) 
           
           <div>
             <h2 className="text-blue-600 font-bold tracking-widest uppercase text-sm mb-3">关于数贸融</h2>
-            <p className="text-3xl md:text-4xl font-bold text-gray-900 mb-8 leading-tight">
+            <p className="text-3xl md:text-4xl font-bold text-gray-900 mb-8 leading-tight text-balance">
               {title || '您的澳洲落地与增量\n战略级合伙人'}
             </p>
             <div className="text-gray-600 text-lg leading-relaxed mb-10 space-y-6">
@@ -88,12 +106,20 @@ export const About = ({ title, content }: { title?: string; content?: string }) 
             
             <div className="grid grid-cols-2 gap-8">
               <div>
-                <div className="text-blue-600 font-bold mb-2">● 深度本地化</div>
-                <p className="text-sm text-gray-500">不只是翻译，更是品牌灵魂的二次植入。</p>
+                <div className="text-blue-600 font-bold mb-2">
+                  {p1Title || '● 深度本地化'}
+                </div>
+                <p className="text-sm text-gray-500">
+                  {p1Desc || '不只是翻译，更是品牌灵魂的二次植入。'}
+                </p>
               </div>
               <div>
-                <div className="text-blue-600 font-bold mb-2">● 全链路覆盖</div>
-                <p className="text-sm text-gray-500">从0到1的冷启动，到1到10的规模化增长。</p>
+                <div className="text-blue-600 font-bold mb-2">
+                  {p2Title || '● 全链路覆盖'}
+                </div>
+                <p className="text-sm text-gray-500">
+                  {p2Desc || '从0到1的冷启动，到1到10的规模化增长。'}
+                </p>
               </div>
             </div>
           </div>
@@ -103,7 +129,21 @@ export const About = ({ title, content }: { title?: string; content?: string }) 
   );
 };
 
-export const Contact = ({ email, phone, formText, formFields }: { email?: string; phone?: string; formText?: string; formFields?: any[] }) => {
+export const Contact = ({ 
+  title, 
+  heading, 
+  email, 
+  phone, 
+  formText, 
+  formFields 
+}: { 
+  title?: string; 
+  heading?: string; 
+  email?: string; 
+  phone?: string; 
+  formText?: string; 
+  formFields?: any[] 
+}) => {
   const [formData, setFormData] = useState<any>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -137,8 +177,12 @@ export const Contact = ({ email, phone, formText, formFields }: { email?: string
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div>
-            <h2 className="text-blue-600 font-bold tracking-widest uppercase text-sm mb-3">联系我们</h2>
-            <p className="text-4xl font-bold text-gray-900 mb-8 leading-tight">开启您的<br />澳洲出海之旅</p>
+            <h2 className="text-blue-600 font-bold tracking-widest uppercase text-sm mb-3">
+              {title || '联系我们'}
+            </h2>
+            <p className="text-4xl font-bold text-gray-900 mb-8 leading-tight whitespace-pre-line">
+              {heading || '开启您的\n澳洲出海之旅'}
+            </p>
             <p className="text-gray-600 text-lg mb-12">
               {formText || '填写右侧表单，我们的中澳专家团队将为您提供免费的初步咨询和合规风险评估。'}
             </p>
@@ -199,19 +243,44 @@ export const Contact = ({ email, phone, formText, formFields }: { email?: string
   );
 };
 
-export const Footer = () => (
+export const Footer = ({ 
+  logoText, 
+  logoSubtitle, 
+  logoUrl,
+  description
+}: { 
+  logoText?: string; 
+  logoSubtitle?: string; 
+  logoUrl?: string;
+  description?: string;
+}) => (
   <footer className="bg-slate-900 text-white py-20">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16 underline-offset-4">
         <div className="col-span-1 md:col-span-2 lg:col-span-1">
-          <div className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">数</div>
-            <div className="flex flex-col">
-              <span className="font-bold text-lg leading-none">数贸融出海服务</span>
-              <span className="text-[10px] font-medium tracking-widest uppercase text-gray-400">Digitrade Fintech</span>
+          <div className="flex items-center gap-0 mb-8 relative -top-5">
+            {logoUrl ? (
+              <img 
+                src={logoUrl} 
+                alt={logoText || '数贸融出海服务'} 
+                className="h-[80px] w-auto object-contain" 
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shrink-0">
+                {logoText ? logoText.substring(0, 1) : '数'}
+              </div>
+            )}
+            <div className="flex flex-col -ml-10 mt-1">
+              <span className="font-bold text-lg leading-tight tracking-tight">{logoText || '数贸融出海服务'}</span>
+              <span className="text-[10px] font-medium tracking-wider uppercase text-gray-400 opacity-80">
+                {logoSubtitle || 'Digitrade Fintech'}
+              </span>
             </div>
           </div>
-          <p className="text-gray-400 leading-relaxed">专注于跨境贸易本土化全链路赋能的智能服务中心。我们不仅是服务提供者，更是客户的海外增长合伙人。</p>
+          <p className="text-gray-400 leading-relaxed">
+            {description || '专注于跨境贸易本土化全链路赋能的智能服务中心。我们不仅是服务提供者，更是客户的海外增长合伙人。'}
+          </p>
         </div>
         <div>
           <h4 className="font-bold text-lg mb-8 text-white">快速入口</h4>

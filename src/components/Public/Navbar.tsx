@@ -3,7 +3,7 @@ import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
 
-export const Navbar = ({ logoText, links }: { logoText?: string; links?: any[] }) => {
+export const Navbar = ({ logoText, logoSubtitle, logoUrl, links }: { logoText?: string; logoSubtitle?: string; logoUrl?: string; links?: any[] }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -25,15 +25,26 @@ export const Navbar = ({ logoText, links }: { logoText?: string; links?: any[] }
   return (
     <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm py-3' : 'bg-transparent py-5'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
-            数
-          </div>
-          <div className="flex flex-col">
-            <span className={`font-bold text-lg leading-none ${isScrolled ? 'text-gray-900' : 'text-white'}`}>
+        <Link to="/" className="flex items-center gap-0 relative -top-4 md:-top-8">
+          {logoUrl ? (
+            <img 
+              src={logoUrl} 
+              alt={logoText || '数贸融出海服务'} 
+              className="h-[80px] md:h-[100px] w-auto object-contain" 
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shrink-0">
+              {logoText ? logoText.substring(0, 1) : '数'}
+            </div>
+          )}
+          <div className="flex flex-col -ml-10 mt-1 md:mt-2">
+            <span className={`font-bold text-base md:text-lg leading-tight tracking-tight ${isScrolled ? 'text-gray-900' : 'text-white'}`}>
               {logoText || '数贸融出海服务'}
             </span>
-            <span className={`text-[10px] font-medium tracking-widest uppercase ${isScrolled ? 'text-gray-500' : 'text-gray-300'}`}>Digitrade Fintech</span>
+            <span className={`text-[8px] md:text-[10px] font-medium tracking-wider uppercase opacity-80 ${isScrolled ? 'text-gray-500' : 'text-gray-300'}`}>
+              {logoSubtitle || 'Digitrade Fintech'}
+            </span>
           </div>
         </Link>
 

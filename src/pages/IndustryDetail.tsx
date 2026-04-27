@@ -10,17 +10,31 @@ import { safeJsonParse } from '../lib/utils';
 export const IndustryDetail = () => {
   const { id } = useParams();
   const [industry, setIndustry] = useState<any>(null);
+  const [siteConfig, setSiteConfig] = useState<any>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchIndustry = async () => {
-      const { data } = await supabase.from('site_config').select('*').eq('key', 'industries').single();
-      if (data) {
-        const industries = safeJsonParse(data.value);
-        const item = industries.find((i: any) => i.id === id || i.name === id);
-        setIndustry(item);
+      try {
+        const { data: configData } = await supabase.from('site_config').select('*');
+        if (configData) {
+          const configObj = configData.reduce((acc: any, item: any) => {
+            acc[item.key] = item.value;
+            return acc;
+          }, {});
+          setSiteConfig(configObj);
+          
+          if (configObj.industries) {
+            const industries = safeJsonParse(configObj.industries);
+            const item = industries.find((i: any) => i.id === id || i.name === id);
+            setIndustry(item);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchIndustry();
     window.scrollTo(0, 0);
@@ -36,7 +50,12 @@ export const IndustryDetail = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
+      <Navbar 
+        logoText={siteConfig.company_logo_text}
+        logoSubtitle={siteConfig.company_logo_subtitle}
+        logoUrl={siteConfig.logo_url}
+        links={safeJsonParse(siteConfig.navbar_links)}
+      />
       
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 overflow-hidden bg-slate-900">
@@ -90,22 +109,22 @@ export const IndustryDetail = () => {
                   <div className="flex gap-4">
                     <Zap className="text-blue-600 shrink-0" />
                     <div>
-                      <h5 className="font-bold mb-2">快速准入</h5>
-                      <p className="text-sm text-gray-500">协助完成行业相关的资质认证与合规审查。</p>
+                      <h5 className="font-bold mb-2">{siteConfig.ind_feat1_title || '快速准入'}</h5>
+                      <p className="text-sm text-gray-500">{siteConfig.ind_feat1_desc || '协助完成行业相关的资质认证与合规审查。'}</p>
                     </div>
                   </div>
                   <div className="flex gap-4">
                     <Globe className="text-blue-600 shrink-0" />
                     <div>
-                      <h5 className="font-bold mb-2">当地资源</h5>
-                      <p className="text-sm text-gray-500">对接澳洲本土核心产业公会与政府监管机构。</p>
+                      <h5 className="font-bold mb-2">{siteConfig.ind_feat2_title || '当地资源'}</h5>
+                      <p className="text-sm text-gray-500">{siteConfig.ind_feat2_desc || '对接澳洲本土核心产业公会与政府监管机构。'}</p>
                     </div>
                   </div>
                   <div className="flex gap-4">
                     <ShieldCheck className="text-blue-600 shrink-0" />
                     <div>
-                      <h5 className="font-bold mb-2">合规风控</h5>
-                      <p className="text-sm text-gray-500">提供澳洲法律框架下的全方位合规咨询。</p>
+                      <h5 className="font-bold mb-2">{siteConfig.ind_feat3_title || '合规风控'}</h5>
+                      <p className="text-sm text-gray-500">{siteConfig.ind_feat3_desc || '提供澳洲法律框架下的全方位合规咨询。'}</p>
                     </div>
                   </div>
                 </div>
@@ -137,7 +156,11 @@ export const IndustryDetail = () => {
         </div>
       </section>
 
-      <Footer />
+      <Footer 
+        logoText={siteConfig.company_logo_text} 
+        logoSubtitle={siteConfig.company_logo_subtitle}
+        logoUrl={siteConfig.logo_url} 
+      />
     </div>
   );
 };
