@@ -16,7 +16,6 @@ export const Navbar = ({ logoText, logoSubtitle, logoUrl, links }: { logoText?: 
   const defaultLinks = [
     { name: '服务体系', href: '/#services' },
     { name: '行业方案', href: '/#industries' },
-    { name: '服务路径', href: '/#how-it-works' },
     { name: '关于我们', href: '/#about' },
   ];
 
@@ -25,20 +24,22 @@ export const Navbar = ({ logoText, logoSubtitle, logoUrl, links }: { logoText?: 
   return (
     <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm py-3' : 'bg-transparent py-5'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-0 relative -top-4 md:-top-8">
+        <Link to="/" className="flex items-center gap-3">
           {logoUrl ? (
-            <img 
-              src={logoUrl} 
-              alt={logoText || '数贸融出海服务'} 
-              className="h-[80px] md:h-[100px] w-auto object-contain" 
-              referrerPolicy="no-referrer"
-            />
+            <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shrink-0 rounded-xl overflow-hidden border border-slate-100 bg-white shadow-sm">
+              <img 
+                src={logoUrl} 
+                alt={logoText || '数贸融出海服务'} 
+                className="max-w-full max-h-full object-contain p-1" 
+                referrerPolicy="no-referrer"
+              />
+            </div>
           ) : (
             <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shrink-0">
               {logoText ? logoText.substring(0, 1) : '数'}
             </div>
           )}
-          <div className="flex flex-col -ml-10 mt-1 md:mt-2 whitespace-nowrap">
+          <div className="flex flex-col whitespace-nowrap">
             <span className={`font-bold text-base md:text-lg leading-tight tracking-tight ${isScrolled ? 'text-gray-900' : 'text-white'}`}>
               {logoText || '数贸融出海服务'}
             </span>

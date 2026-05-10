@@ -21,8 +21,6 @@ export default function App() {
         
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/industry/:id" element={<IndustryDetail />} />
-        <Route path="/products" element={<ProductMatrix />} />
         <Route 
           path="/admin" 
           element={

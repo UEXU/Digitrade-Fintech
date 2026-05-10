@@ -5,7 +5,8 @@ import { Hero } from '../components/Public/Hero';
 import { PainPoints } from '../components/Public/PainPoints';
 import { Services } from '../components/Public/Services';
 import { Industries, About, Contact, Footer } from '../components/Public/Layout';
-import { ShieldCheck, Users, TrendingUp, Building2, Globe } from 'lucide-react';
+import { ShieldCheck, Users, TrendingUp, Building2, Globe, Zap } from 'lucide-react';
+import { DEFAULT_PRODUCTS } from '../constants';
 import { safeJsonParse } from '../lib/utils';
 
 const DEFAULT_CONFIG = {
@@ -39,12 +40,6 @@ const DEFAULT_CONFIG = {
     { title: '服务严重割裂', desc: '咨询公司只讲战略，代办机构只做执行，没有人覆盖全流程。', icon: 'Briefcase', more: 'Digitrade 整合了顶层商业设计到落地合规执行的闭环。我们不只给你报告，我们与您并肩走进市场，解决从0到1的每一个细节问题。' },
   ])
 };
-
-const DEFAULT_PRODUCTS = [
-  { id: 1, title: '战略入市服务', description: '解决赴澳初期最紧迫的基础挑战，建立合法运营实体。', price: '$3,800+', image_url: 'strategy', stage: '第一阶段：快速变现', features: ["市场调研报告", "商业模式设计", "合规路径规划", "公司注册与税务登记"] },
-  { id: 2, title: '本地化运营服务', description: '解决深层次运营挑战，实现品牌在澳洲的真正扎根。', price: '$5,000+', image_url: 'localization', stage: '第二阶段：增长型产品', features: ["品牌本地化改造", "数字营销全案", "渠道建设与对接", "人才招聘与管理"] },
-  { id: 3, title: '增长赋能服务', description: '深度聚焦重点产业，助力企业实现从落地到扎根的质变。', price: '项目制', image_url: 'growth', stage: '第三阶段：高价值产品', features: ["政府资源嫁接", "产业基金申请支持", "财税外包服务", "战略合作撮合"] }
-];
 
 export const HomePage = () => {
   const [siteConfig, setSiteConfig] = useState<any>(DEFAULT_CONFIG);
@@ -90,7 +85,21 @@ export const HomePage = () => {
         }
 
         if (productsData && productsData.length > 0) {
-          setProducts(productsData);
+          // Map products to ensure they have default values for missing fields like 'stage'
+          const mappedProducts = productsData.map((p: any) => ({
+            ...p,
+            stage: p.stage || (p.id === 1 ? '决策引导' : p.id === 2 ? '合规落地' : p.id === 3 ? '市场增长' : p.id === 4 ? '团队运营' : p.id === 5 ? '财税合规' : '资源生态')
+          }));
+          
+          // Ensure we show at least 6 modules even if DB has fewer
+          if (mappedProducts.length < 6) {
+            const missing = DEFAULT_PRODUCTS.slice(mappedProducts.length);
+            setProducts([...mappedProducts, ...missing]);
+          } else {
+            setProducts(mappedProducts);
+          }
+        } else {
+          setProducts(DEFAULT_PRODUCTS);
         }
       } catch (error) {
         console.error('Error fetching site data:', error);
@@ -136,42 +145,12 @@ export const HomePage = () => {
         <About 
           title={siteConfig.about_title} 
           content={siteConfig.about_content}
+          imageUrl={siteConfig.about_image_url}
           p1Title={siteConfig.about_p1_title}
           p1Desc={siteConfig.about_p1_desc}
           p2Title={siteConfig.about_p2_title}
           p2Desc={siteConfig.about_p2_desc}
         />
-        
-        {/* Service Path Section */}
-        <section id="how-it-works" className="py-24 bg-blue-600">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-20 text-white">
-              <h2 className="text-blue-200 font-bold tracking-widest uppercase text-sm mb-3">
-                {siteConfig.service_path_title || '服务路径'}
-              </h2>
-              <p className="text-3xl md:text-4xl font-bold">
-                {siteConfig.service_path_heading || '我们如何帮助企业在澳洲成功？'}
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-12 relative">
-              {steps.map((step: any, idx: number) => (
-                <div key={step.title} className="text-center">
-                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 text-blue-600 shadow-xl">
-                    {idx === 0 && <Globe className="w-5 h-5" />}
-                    {idx === 1 && <ShieldCheck className="w-5 h-5" />}
-                    {idx === 2 && <Users className="w-5 h-5" />}
-                    {idx === 3 && <TrendingUp className="w-5 h-5" />}
-                    {idx === 4 && <Building2 className="w-5 h-5" />}
-                    {idx > 4 && <Zap className="w-5 h-5" />}
-                  </div>
-                  <div className="text-blue-100 text-xs font-bold uppercase tracking-widest mb-2 font-mono">Step {idx + 1}</div>
-                  <h3 className="text-xl font-bold text-white mb-2">{step.title}</h3>
-                  <p className="text-blue-200 text-sm">{step.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
 
         <Contact 
           title={siteConfig.contact_title}

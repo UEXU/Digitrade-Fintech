@@ -21,6 +21,77 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { safeJsonParse } from '../../lib/utils';
+import { DEFAULT_PRODUCTS } from '../../constants';
+
+const STANDARD_PRODUCT_TEMPLATE = DEFAULT_PRODUCTS.map(p => ({
+  ...p,
+  features: JSON.stringify(p.features)
+}));
+
+const ImageUploadField = ({ 
+  value, 
+  onChange, 
+  label, 
+  placeholder = "输入图片 URL 或点击上传",
+}: { 
+  value: string; 
+  onChange: (val: string) => void; 
+  label?: string;
+  placeholder?: string;
+}) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 4 * 1024 * 1024) {
+        alert('图片大小不能超过 4MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        onChange(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {label && (
+        <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
+          {label}
+        </label>
+      )}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex-grow group relative">
+          <input 
+            className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none transition-all font-mono text-xs pr-12"
+            placeholder={placeholder}
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+          />
+          {value && (
+            <button 
+              onClick={() => onChange('')}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-red-500 transition-colors"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
+        </div>
+        <label className="cursor-pointer bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-blue-600/20">
+          <ImageIcon size={18} />
+          上传本地文件
+          <input 
+            type="file" 
+            className="hidden" 
+            accept="image/*"
+            onChange={handleFileChange}
+          />
+        </label>
+      </div>
+    </div>
+  );
+};
 
 export const AdminDashboard = () => {
   const [siteConfig, setSiteConfig] = useState<any>({});
@@ -48,7 +119,20 @@ export const AdminDashboard = () => {
       }, {});
       setSiteConfig(configObj);
     }
-    if (productsData) setProducts(productsData);
+    if (productsData) {
+      if (productsData.length > 0) {
+        // If we have data, we use it, but if it's less than 6, we fill with defaults to be consistent
+        if (productsData.length < 6) {
+          const missing = STANDARD_PRODUCT_TEMPLATE.slice(productsData.length);
+          setProducts([...productsData, ...missing]);
+        } else {
+          setProducts(productsData);
+        }
+      } else {
+        // If DB is empty, use defaults
+        setProducts(STANDARD_PRODUCT_TEMPLATE);
+      }
+    }
     if (leadsData) setLeads(leadsData);
     setLoading(false);
   };
@@ -81,16 +165,87 @@ export const AdminDashboard = () => {
     setProducts(products.map(p => p.id === id ? { ...p, [field]: value } : p));
   };
 
+  const addProduct = () => {
+    const nextId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+    const newProduct = {
+      id: nextId,
+      title: '新服务模块',
+      description: '简短描述该模块的核心价值...',
+      price: '咨询洽谈',
+      image_url: 'Briefcase',
+      stage: '全周期赋能',
+      features: JSON.stringify(["服务项1", "服务项2"])
+    };
+    setProducts([...products, newProduct]);
+  };
+
+  const deleteProduct = (id: number) => {
+    if (confirm('确定要删除这个产品模块吗？')) {
+      setProducts(products.filter(p => p.id !== id));
+    }
+  };
+
   const handleSaveProducts = async () => {
     setSaving(true);
     try {
-      for (const product of products) {
-        const { id, created_at, ...updateData } = product;
-        await supabase.from('products').update(updateData).eq('id', product.id);
+      // Use upsert to handle both existing and new products more reliably
+      const syncData = products.map(({ created_at, ...p }) => p);
+      const { error } = await supabase.from('products').upsert(syncData);
+      
+      if (error) {
+        console.error('Supabase Upsert Error:', error);
+        // If it failed because of 'stage' column, try without it
+        if (error.message.includes('column "stage" does not exist')) {
+          const { error: retryError } = await supabase.from('products').upsert(syncData.map(({ stage, ...p }: any) => p));
+          if (retryError) throw retryError;
+        } else {
+          throw error;
+        }
       }
-      alert('产品服务已同步更新！');
-    } catch (e) {
-      alert('保存失败');
+      alert('产品服务矩阵已即时同步！');
+      fetchData(); // Refresh state after save
+    } catch (e: any) {
+      console.error(e);
+      alert('同步失败: ' + (e.message || '未知错误'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleResetToStandard = async () => {
+    if (!confirm('确定要重置为标准的 6 大产品模块吗？这会覆盖当前的所有产品。')) return;
+    setSaving(true);
+    try {
+      // 1. Thoroughly clear the products table
+      const { error: delError } = await supabase.from('products').delete().gte('id', 0);
+      if (delError) {
+        console.error('Delete error:', delError);
+        // If delete fails, try a different approach if possible, but neq('id', -2) is usually safe
+        await supabase.from('products').delete().neq('id', -2);
+      }
+
+      // 2. Prepare data for insertion
+      // We pass the exact template with mapped features for DB storage
+      const dataToInsert = DEFAULT_PRODUCTS.map(({ id, ...rest }) => ({
+        ...rest,
+        features: JSON.stringify(rest.features)
+      }));
+
+      // 3. Perform a fresh insert
+      const { error: insError } = await supabase.from('products').insert(dataToInsert);
+      
+      if (insError) {
+        console.error('Reset Insert Error:', insError);
+        // Fallback to upsert if insert fails for some reason
+        const { error: upsertError } = await supabase.from('products').upsert(dataToInsert);
+        if (upsertError) throw upsertError;
+      }
+      
+      await fetchData();
+      alert('已成功重置为标准 6 大模块矩阵！');
+    } catch (e: any) {
+      console.error(e);
+      alert('重置失败: ' + (e.message || '未知错误'));
     } finally {
       setSaving(false);
     }
@@ -296,18 +451,12 @@ export const AdminDashboard = () => {
                     </label>
                     <div className="w-full min-h-[120px] bg-slate-100 rounded-3xl overflow-hidden mb-4 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-6 transition-all hover:bg-slate-50">
                       {siteConfig.logo_url ? (
-                        <div className="flex flex-col items-center gap-4 w-full">
+                        <div className="flex flex-col items-center justify-center bg-white p-2 rounded-xl shadow-inner w-24 h-24 border border-slate-100 overflow-hidden">
                           <img 
                             src={siteConfig.logo_url} 
-                            className="max-h-24 w-auto object-contain"
+                            className="max-w-full max-h-full object-contain"
                             referrerPolicy="no-referrer"
                           />
-                          <button 
-                            onClick={() => handleUpdateConfig('logo_url', '')}
-                            className="text-xs text-red-500 hover:underline font-medium"
-                          >
-                            移除 Logo 图片
-                          </button>
                         </div>
                       ) : (
                         <div className="flex flex-col items-center gap-2">
@@ -317,35 +466,11 @@ export const AdminDashboard = () => {
                       )}
                     </div>
                     
-                    <div className="flex gap-4">
-                      <div className="flex-grow">
-                        <input 
-                          className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none transition-all font-mono text-xs"
-                          placeholder="输入图片 URL 或点击右侧上传"
-                          value={siteConfig.logo_url || ''}
-                          onChange={(e) => handleUpdateConfig('logo_url', e.target.value)}
-                        />
-                      </div>
-                      <label className="cursor-pointer bg-blue-600 text-white px-6 py-4 rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all flex items-center gap-2 shrink-0 shadow-lg shadow-blue-600/20">
-                        <Plus size={18} />
-                        上传图片
-                        <input 
-                          type="file" 
-                          className="hidden" 
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onloadend = () => {
-                                handleUpdateConfig('logo_url', reader.result as string);
-                              };
-                              reader.readAsDataURL(file);
-                            }
-                          }}
-                        />
-                      </label>
-                    </div>
+                    <ImageUploadField 
+                      value={siteConfig.logo_url}
+                      onChange={(val) => handleUpdateConfig('logo_url', val)}
+                      placeholder="输入 Logo 图片 URL 或上传文件"
+                    />
                     <p className="text-[10px] text-slate-400 mt-2">提示：支持 PNG, SVG, JPG。Logo 图片将与品牌名称并排显示。</p>
                   </div>
                   
@@ -413,18 +538,17 @@ export const AdminDashboard = () => {
                   <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
                     <ImageIcon className="text-blue-600 w-4 h-4" /> 首页大图 (Hero Background)
                   </label>
-                  <div className="w-full h-48 bg-slate-100 rounded-3xl overflow-hidden mb-4 border-2 border-dashed border-slate-200">
+                  <div className="w-full h-48 bg-slate-100 rounded-3xl overflow-hidden mb-8 border-2 border-dashed border-slate-200">
                     <img 
                       src={siteConfig.hero_image_url || 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&q=80&w=1920'} 
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
                     />
                   </div>
-                  <input 
-                    className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none transition-all font-mono text-xs"
+                  <ImageUploadField 
+                    value={siteConfig.hero_image_url}
+                    onChange={(val) => handleUpdateConfig('hero_image_url', val)}
                     placeholder="输入背景图 URL"
-                    value={siteConfig.hero_image_url || ''}
-                    onChange={(e) => handleUpdateConfig('hero_image_url', e.target.value)}
                   />
                 </div>
 
@@ -468,7 +592,25 @@ export const AdminDashboard = () => {
             {/* ABOUT TAB */}
             {activeTab === 'about' && (
               <div className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 space-y-10">
-                <div className="space-y-4">
+                <div className="space-y-6">
+                  <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
+                    <ImageIcon className="text-blue-600 w-4 h-4" /> 关于我们 配图 (About Image)
+                  </label>
+                  <div className="w-full max-w-md aspect-[4/3] bg-slate-100 rounded-3xl overflow-hidden mb-4 border-2 border-dashed border-slate-200">
+                    <img 
+                      src={siteConfig.about_image_url || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200'} 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <ImageUploadField 
+                    value={siteConfig.about_image_url}
+                    onChange={(val) => handleUpdateConfig('about_image_url', val)}
+                    placeholder="输入配图 URL 或上传文件"
+                  />
+                </div>
+
+                <div className="space-y-4 border-t border-slate-50 pt-10">
                   <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
                     <Type className="text-blue-600 w-4 h-4" /> About Title (关于我们标题)
                   </label>
@@ -639,24 +781,50 @@ export const AdminDashboard = () => {
             {/* PRODUCTS TAB */}
             {activeTab === 'products' && (
               <div className="space-y-10">
+                <div className="flex justify-between items-center bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                  <div>
+                    <h3 className="font-bold text-lg">产品矩阵模块管理</h3>
+                    <p className="text-sm">
+                      {products.length === 6 
+                        ? <span className="text-green-500 font-bold">已同步标准 6 模块体系</span>
+                        : <span className="text-amber-500 font-bold underline">检测到模块数量异常 ({products.length})，建议立即重置</span>
+                      }
+                    </p>
+                  </div>
+                  <div className="flex flex-col md:flex-row gap-4 items-center">
+                    <button 
+                      onClick={handleResetToStandard} 
+                      className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all shadow-lg ${products.length !== 6 ? 'bg-orange-500 text-white hover:bg-orange-600 animate-pulse' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20'}`}
+                    >
+                      <Zap size={18}/> {products.length !== 6 ? '立即修复并重置为标准 6 模块' : '重置为标准模块'}
+                    </button>
+                    <button onClick={addProduct} className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all shadow-lg"><Plus size={18}/> 新增自定义模块</button>
+                  </div>
+                </div>
+
                 {products.map((product) => (
-                  <div key={product.id} className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100">
+                  <div key={product.id} className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 relative group">
+                    <button onClick={() => deleteProduct(product.id)} className="absolute top-6 right-6 p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                      <Trash2 size={20} />
+                    </button>
                     <div className="flex flex-col lg:flex-row gap-12">
                       <div className="lg:w-1/3 space-y-6">
                         <div className="w-full aspect-video rounded-3xl bg-slate-100 overflow-hidden border border-slate-200 mb-4">
                           <img 
-                            src={product.image_url.startsWith('http') ? product.image_url : `https://picsum.photos/seed/${product.image_url}/800/600`} 
+                            src={product.image_url.startsWith('http') || product.image_url.startsWith('data:') ? product.image_url : `https://picsum.photos/seed/${product.image_url}/800/600`} 
                             className="w-full h-full object-cover" 
                             referrerPolicy="no-referrer"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase">产品封面 URL</label>
-                          <input className="w-full px-4 py-3 rounded-xl border border-slate-200 text-xs font-mono" value={product.image_url} onChange={(e) => handleUpdateProduct(product.id, 'image_url', e.target.value)} />
-                        </div>
+                        <ImageUploadField 
+                          label="产品封面"
+                          value={product.image_url}
+                          onChange={(val) => handleUpdateProduct(product.id, 'image_url', val)}
+                          placeholder="图片 URL 或上传"
+                        />
                       </div>
                       <div className="lg:w-2/3 space-y-6">
-                        <div className="grid md:grid-cols-2 gap-6">
+                        <div className="grid md:grid-cols-3 gap-6">
                           <div className="space-y-2">
                             <label className="text-[10px] font-bold text-slate-400 uppercase">产品名称</label>
                             <input className="w-full px-4 py-3 rounded-xl border border-slate-200 font-bold" value={product.title} onChange={(e) => handleUpdateProduct(product.id, 'title', e.target.value)} />
@@ -664,6 +832,10 @@ export const AdminDashboard = () => {
                           <div className="space-y-2">
                             <label className="text-[10px] font-bold text-slate-400 uppercase">起售价文字</label>
                             <input className="w-full px-4 py-3 rounded-xl border border-slate-200 font-mono" value={product.price} onChange={(e) => handleUpdateProduct(product.id, 'price', e.target.value)} />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">适合阶段/服务标签</label>
+                            <input className="w-full px-4 py-3 rounded-xl border border-slate-200 font-bold text-blue-600" value={product.stage || ''} onChange={(e) => handleUpdateProduct(product.id, 'stage', e.target.value)} />
                           </div>
                         </div>
                         <div className="space-y-2">
@@ -678,36 +850,16 @@ export const AdminDashboard = () => {
                     </div>
                   </div>
                 ))}
-                  <div className="p-8 bg-blue-900 rounded-[40px] text-white flex flex-col gap-6 shadow-2xl shadow-blue-900/40">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-xl font-bold mb-1">产品矩阵二级页面配置</h4>
-                        <p className="text-blue-300 text-sm">这些内容将自动应用在 `/products` 页面上展示。</p>
-                      </div>
-                      <button onClick={() => navigate('/products')} className="px-6 py-3 bg-white text-blue-900 rounded-xl font-bold hover:bg-blue-50">预览页面</button>
-                    </div>
-                    
-                    <div className="grid md:grid-cols-2 gap-6 pt-6 border-t border-white/10">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-blue-300 uppercase">二级页主标题</label>
-                        <input className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white font-bold" value={siteConfig.products_title || '数贸融出海产品矩阵'} onChange={(e) => handleUpdateConfig('products_title', e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-blue-300 uppercase">二级页描述文字</label>
-                        <input className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white text-sm" value={siteConfig.products_subtitle || '从基础准入到深层增长，我们提供全生命周期的澳洲落地与赋能服务。'} onChange={(e) => handleUpdateConfig('products_subtitle', e.target.value)} />
-                      </div>
-                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-            {/* INDUSTRIES TAB (Wait, I need to keep industries too) */}
+            {/* INDUSTRIES TAB */}
             {activeTab === 'industries' && (
               <div className="space-y-8">
                 <div className="flex justify-between items-center bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
                   <div>
-                    <h3 className="font-bold text-lg">行业方案深度管理</h3>
-                    <p className="text-sm text-slate-400">管理行业二级详情页的图片与深度文本内容</p>
+                    <h3 className="font-bold text-lg">行业方案展现管理</h3>
+                    <p className="text-sm text-slate-400">管理行业板块的背景图与核心介绍文字</p>
                   </div>
                   <button onClick={addIndustry} className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold text-sm"><Plus size={18}/> 新增方案</button>
                 </div>
@@ -747,14 +899,19 @@ export const AdminDashboard = () => {
                     <button onClick={() => deleteIndustry(idx)} className="absolute top-6 right-6 p-3 text-slate-300 hover:text-red-500 transition-colors bg-slate-50 rounded-2xl opacity-0 group-hover:opacity-100"><Trash2 size={20} /></button>
                     <div className="flex flex-col xl:flex-row gap-10">
                       <div className="xl:w-80 shrink-0 space-y-6">
-                        <div className="w-full h-48 rounded-3xl overflow-hidden bg-slate-100 border border-slate-200">
+                        <div className="w-full h-48 rounded-3xl overflow-hidden bg-slate-100 border border-slate-200 mb-6">
                           <img src={item.image} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         </div>
-                        <input className="w-full px-4 py-3 rounded-xl border border-slate-200 text-xs font-mono" value={item.image} onChange={(e) => {
-                          const newList = [...currentIndustries];
-                          newList[idx].image = e.target.value;
-                          updateIndustries(newList);
-                        }} />
+                        <ImageUploadField 
+                          label="背景图片"
+                          value={item.image}
+                          onChange={(val) => {
+                            const newList = [...currentIndustries];
+                            newList[idx].image = val;
+                            updateIndustries(newList);
+                          }}
+                          placeholder="方案背景图 URL"
+                        />
                       </div>
                       <div className="flex-grow space-y-6">
                         <div className="grid md:grid-cols-2 gap-6">
@@ -769,11 +926,6 @@ export const AdminDashboard = () => {
                             updateIndustries(newList);
                           }} />
                         </div>
-                        <textarea className="w-full px-5 py-4 rounded-2xl border border-slate-200 text-sm leading-loose bg-slate-50/50 h-[240px]" value={item.fullContent || ''} onChange={(e) => {
-                          const newList = [...currentIndustries];
-                          newList[idx].fullContent = e.target.value;
-                          updateIndustries(newList);
-                        }} />
                       </div>
                     </div>
                   </div>

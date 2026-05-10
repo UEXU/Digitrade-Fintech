@@ -36,13 +36,7 @@ export const Industries = ({ data, title, heading }: { data?: any[]; title?: str
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent"></div>
               <div className="absolute bottom-0 left-0 p-8 w-full">
                 <h3 className="text-2xl font-bold text-white mb-2">{item.name}</h3>
-                <p className="text-gray-300 text-sm mb-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">{item.description}</p>
-                <Link 
-                  to={`/industry/${encodeURIComponent(item.id || item.name)}`}
-                  className="text-white font-bold flex items-center gap-2 text-sm hover:translate-x-2 transition-transform"
-                >
-                  查看方案 <ArrowRight className="w-4 h-4" />
-                </Link>
+                <p className="text-gray-300 text-sm leading-relaxed">{item.description}</p>
               </div>
             </div>
           ))}
@@ -55,6 +49,7 @@ export const Industries = ({ data, title, heading }: { data?: any[]; title?: str
 export const About = ({ 
   title, 
   content,
+  imageUrl,
   p1Title,
   p1Desc,
   p2Title,
@@ -62,6 +57,7 @@ export const About = ({
 }: { 
   title?: string; 
   content?: string;
+  imageUrl?: string;
   p1Title?: string;
   p1Desc?: string;
   p2Title?: string;
@@ -75,7 +71,7 @@ export const About = ({
             <div className="absolute -top-12 -left-12 w-64 h-64 bg-blue-600/5 rounded-full blur-3xl animate-pulse"></div>
             <div className="relative rounded-[40px] overflow-hidden shadow-2xl shadow-slate-200">
               <img 
-                src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200" 
+                src={imageUrl || "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200"} 
                 alt="Office" 
                 className="w-full aspect-[4/3] object-cover"
                 referrerPolicy="no-referrer"
@@ -258,20 +254,22 @@ export const Footer = ({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16 underline-offset-4">
         <div className="col-span-1 md:col-span-2 lg:col-span-1">
-          <div className="flex items-center gap-0 mb-8 relative -top-5">
+          <div className="flex items-center gap-3 mb-8">
             {logoUrl ? (
-              <img 
-                src={logoUrl} 
-                alt={logoText || '数贸融出海服务'} 
-                className="h-[80px] w-auto object-contain" 
-                referrerPolicy="no-referrer"
-              />
+              <div className="w-10 h-10 flex items-center justify-center shrink-0 rounded-lg overflow-hidden border border-slate-100 bg-white">
+                <img 
+                  src={logoUrl} 
+                  alt={logoText || '数贸融出海服务'} 
+                  className="max-w-full max-h-full object-contain p-1" 
+                  referrerPolicy="no-referrer"
+                />
+              </div>
             ) : (
               <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shrink-0">
                 {logoText ? logoText.substring(0, 1) : '数'}
               </div>
             )}
-            <div className="flex flex-col -ml-10 mt-1 whitespace-nowrap">
+            <div className="flex flex-col whitespace-nowrap">
               <span className="font-bold text-lg leading-tight tracking-tight">{logoText || '数贸融出海服务'}</span>
               <span className="text-[10px] font-medium tracking-wider uppercase text-gray-400 opacity-80">
                 {logoSubtitle || 'Digitrade Fintech'}
