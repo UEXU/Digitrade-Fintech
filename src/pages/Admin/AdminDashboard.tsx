@@ -221,9 +221,10 @@ export const AdminDashboard = () => {
       
       console.log('正在获取云端现有数据现状...');
       const { data: cloudProducts, error: fetchCloudError } = await supabase.from('products').select('id');
+      let cloudIds: number[] = [];
       
-      if (!fetchCloudError) {
-        const cloudIds = (cloudProducts || []).map(cp => Number(cp.id));
+      if (!fetchCloudError && cloudProducts) {
+        cloudIds = cloudProducts.map(cp => Number(cp.id));
         const localIds = products.map(p => Number(p.id));
         const idsToDelete = cloudIds.filter(cid => !localIds.includes(cid));
         
@@ -252,31 +253,39 @@ export const AdminDashboard = () => {
       });
 
       if (syncPayloads.length > 0) {
-        // 使用 Upsert 而不是 Insert 解决冲突并绕过 identity 限制（如果项已存在）
-        const { error: upsertError } = await supabase.from('products').upsert(syncPayloads, { onConflict: 'id' });
+        console.log('正在执行增量保护式同步...');
         
-        if (upsertError) {
-          console.warn('批量 Upsert 受阻，启动降级逐行同步...', upsertError.message);
-          const isIdentityError = upsertError.message.includes('non-DEFAULT value');
-          const isStageMissing = upsertError.message.includes('column "stage" does not exist');
+        for (const payload of syncPayloads) {
+          const { id, ...dataWithoutId } = payload;
           
-          for (const payload of syncPayloads) {
-            const finalPayload = { ...payload };
-            if (isStageMissing) delete (finalPayload as any).stage;
+          // 检查该 ID 在云端是否存在
+          const existsInCloud = cloudIds.includes(Number(id));
+          
+          if (existsInCloud) {
+            // 已存在：使用 update 且不传送 id 字段本身
+            const { error: updErr } = await supabase
+              .from('products')
+              .update(dataWithoutId)
+              .eq('id', id);
             
-            // 降级尝试：如果项存在，由于 Identity 限制，Insert 肯定失败，但 Upsert 可能失败（如果底层转 Insert）。
-            // 这里我们用 Upsert 以覆盖为主。
-            const { error: rowError } = await supabase.from('products').upsert(finalPayload, { onConflict: 'id' });
-            
-            if (rowError) {
-              console.error(`模块 [${payload.id}] 同步失败:`, rowError.message);
-              // 如果是严重的 identity 错误且项不存在，这里可能依旧会报。
+            if (updErr) {
+              console.error(`模块 [${id}] 更新失败:`, updErr.message);
+            } else {
+              successCount++;
+            }
+          } else {
+            // 不存在：使用 insert 且不传送 id (让数据库自增)
+            // 注意：这会导致云端 ID 可能与本地临时 ID 不一致，但能保证写入成功
+            const { error: insErr } = await supabase
+              .from('products')
+              .insert(dataWithoutId);
+              
+            if (insErr) {
+              console.error(`新模块写入失败:`, insErr.message);
             } else {
               successCount++;
             }
           }
-        } else {
-          successCount = syncPayloads.length;
         }
       }
 
