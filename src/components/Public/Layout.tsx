@@ -190,15 +190,47 @@ export const Contact = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
     try {
-      const { error } = await supabase.from('leads').insert([{ data: formData }]);
-      if (error) throw error;
-      alert('感谢您的咨询，我们的顾问将尽快与您联系！');
+      const now = new Date().toISOString();
+      const submissionData = {
+        name: formData.name || '',
+        email: formData.email || '',
+        phone: formData.phone || '',
+        company: formData.company || '',
+        industry: formData.industry || '',
+        requirements: formData.requirements || '',
+        source: window.location.pathname,
+        submitted_at: now
+      };
+
+      console.log('Submitting lead data:', submissionData);
+
+      // 尝试多种插入方式，确保至少有一种能成功
+      let result = await supabase.from('leads').insert([submissionData]);
+      
+      if (result.error) {
+        console.error('Regular insert failed:', result.error);
+        // 尝试以 JSON 格式存入 data 字段 (兼容模式)
+        console.log('Trying JSON fallback...');
+        result = await supabase.from('leads').insert([{ 
+          data: formData,
+          source: window.location.pathname,
+          submitted_at: now
+        }]);
+      }
+
+      if (result.error) {
+        console.error('All insert attempts failed:', result.error);
+        throw new Error(result.error.message || 'Database error');
+      }
+
+      alert('您的咨询已收到！我们会尽快处理您的需求。');
       setFormData({});
       (e.target as HTMLFormElement).reset();
-    } catch (error) {
-      console.error('Submission error:', error);
-      alert('提交失败，请稍后再试。');
+    } catch (error: any) {
+      console.error('Final lead submission fallback error:', error);
+      alert(`提交遇到技术细节错误: ${error.message}。如果持续失败，请直接通过底部联系方式联系我们。`);
     } finally {
       setIsSubmitting(false);
     }
@@ -255,6 +287,7 @@ export const Contact = ({
                       placeholder={field.placeholder || field.label}
                       className="w-full px-5 py-4 rounded-2xl bg-white border border-slate-200 focus:border-blue-600 outline-none"
                       rows={3}
+                      value={formData[field.name] || ''}
                       onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
                     />
                   ) : (
@@ -263,6 +296,7 @@ export const Contact = ({
                       required={field.required}
                       placeholder={field.placeholder || field.label}
                       className="w-full px-5 py-4 rounded-2xl bg-white border border-slate-200 focus:border-blue-600 outline-none"
+                      value={formData[field.name] || ''}
                       onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
                     />
                   )}
