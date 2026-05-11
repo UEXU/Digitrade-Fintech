@@ -25,21 +25,46 @@ export const Industries = ({ data, title, heading }: { data?: any[]; title?: str
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {list.map((item, idx) => (
-            <div key={item.id || idx} className="group relative rounded-3xl overflow-hidden aspect-[4/5] shadow-lg">
-              <img 
-                src={item.image} 
-                alt={item.name} 
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 p-8 w-full">
-                <h3 className="text-2xl font-bold text-white mb-2">{item.name}</h3>
-                <p className="text-gray-300 text-sm leading-relaxed">{item.description}</p>
-              </div>
-            </div>
-          ))}
+          {list.map((item, idx) => {
+            const imageUrl = item.image || '';
+            const isDataImage = imageUrl.startsWith('data:');
+            const isUrlImage = imageUrl.startsWith('http') || imageUrl.startsWith('/');
+            const isExternalImage = isDataImage || isUrlImage || (imageUrl.includes('.') && imageUrl.length > 4);
+            
+            const displayUrl = isUrlImage && !isDataImage
+              ? (imageUrl.includes('?') ? `${imageUrl}&v=${Date.now()}` : `${imageUrl}?v=${Date.now()}`)
+              : imageUrl;
+
+            return (
+              <Link 
+                to={`/industry/${item.id || idx}`}
+                key={item.id || idx} 
+                className="group relative rounded-3xl overflow-hidden aspect-[4/5] shadow-lg bg-slate-100 flex flex-col"
+              >
+                <img 
+                  key={imageUrl}
+                  src={isExternalImage ? displayUrl : `https://picsum.photos/seed/${item.id || idx}/800/1000`} 
+                  alt={item.name} 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (!target.src.includes('picsum.photos')) {
+                      target.src = `https://picsum.photos/seed/${item.id || idx}/800/1000`;
+                    }
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-80 transition-opacity group-hover:opacity-60"></div>
+                <div className="absolute bottom-0 left-0 p-8 w-full">
+                  <h3 className="text-2xl font-bold text-white mb-2 tracking-tight flex items-center gap-2">
+                    {item.name}
+                    <ArrowRight size={20} className="md:opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
+                  </h3>
+                  <p className="text-slate-300 text-sm leading-relaxed font-medium line-clamp-2">{item.description}</p>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -69,13 +94,32 @@ export const About = ({
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="relative">
             <div className="absolute -top-12 -left-12 w-64 h-64 bg-blue-600/5 rounded-full blur-3xl animate-pulse"></div>
-            <div className="relative rounded-[40px] overflow-hidden shadow-2xl shadow-slate-200">
-              <img 
-                src={imageUrl || "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200"} 
-                alt="Office" 
-                className="w-full aspect-[4/3] object-cover"
-                referrerPolicy="no-referrer"
-              />
+            <div className="relative rounded-[40px] overflow-hidden shadow-2xl shadow-slate-200 bg-slate-100">
+              {(() => {
+                const img = imageUrl || '';
+                const isDataImage = img.startsWith('data:');
+                const isUrlImage = img.startsWith('http') || img.startsWith('/');
+                const isExternalImage = isDataImage || isUrlImage || (img.length > 20 && img.includes('.'));
+                
+                const displayUrl = isUrlImage && !isDataImage
+                  ? (img.includes('?') ? `${img}&v=${Date.now()}` : `${img}?v=${Date.now()}`)
+                  : img;
+                
+                return (
+                  <img 
+                    src={isExternalImage ? displayUrl : "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200"} 
+                    alt="About Us" 
+                    className="w-full aspect-[4/3] object-cover"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      if (!target.src.includes('unsplash.com') && !target.src.startsWith('data:')) {
+                         target.src = "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200";
+                      }
+                    }}
+                  />
+                );
+              })()}
               <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-transparent"></div>
             </div>
             <div className="absolute -bottom-6 -right-6 bg-white p-8 rounded-3xl shadow-xl border border-slate-100 hidden md:block">

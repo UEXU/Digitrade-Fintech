@@ -66,13 +66,24 @@ const ImageUploadField = ({
           <input 
             className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none transition-all font-mono text-xs pr-12"
             placeholder={placeholder}
-            value={value || ''}
+            value={value?.startsWith('data:') ? '已上传本地图片文件 (Base64)' : (value || '')}
             onChange={(e) => onChange(e.target.value)}
+            disabled={value?.startsWith('data:')}
           />
+          {value?.startsWith('data:') && (
+            <div className="absolute inset-y-0 left-0 flex items-center px-6 pointer-events-none w-full bg-slate-100 rounded-2xl border border-blue-200">
+              <span className="bg-blue-600 text-white text-[10px] items-center px-2 py-1 rounded font-black uppercase tracking-widest h-fit shadow-sm">
+                LOCAL IMAGE
+              </span>
+              <span className="ml-3 text-slate-500 text-[10px] font-mono truncate max-w-[200px]">
+                {value.substring(0, 40)}...
+              </span>
+            </div>
+          )}
           {value && (
             <button 
               onClick={() => onChange('')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-red-500 transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-red-500 transition-colors z-10"
             >
               <Trash2 size={16} />
             </button>
@@ -96,9 +107,11 @@ const ImageUploadField = ({
 export const AdminDashboard = () => {
   const [siteConfig, setSiteConfig] = useState<any>({});
   const [products, setProducts] = useState<any[]>([]);
+  const [deletedProductIds, setDeletedProductIds] = useState<number[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [connStatus, setConnStatus] = useState<'connected' | 'error' | 'unknown'>('unknown');
   const [activeTab, setActiveTab] = useState<'navbar' | 'hero' | 'about' | 'service-path' | 'products' | 'industries' | 'contact' | 'pain-points' | 'leads'>('navbar');
   const navigate = useNavigate();
 
@@ -108,33 +121,63 @@ export const AdminDashboard = () => {
 
   const fetchData = async () => {
     setLoading(true);
-    const { data: configData } = await supabase.from('site_config').select('*');
-    const { data: productsData } = await supabase.from('products').select('*').order('id');
-    const { data: leadsData } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
-
-    if (configData) {
-      const configObj = configData.reduce((acc: any, item: any) => {
-        acc[item.key] = item.value;
-        return acc;
-      }, {});
-      setSiteConfig(configObj);
-    }
-    if (productsData) {
-      if (productsData.length > 0) {
-        // If we have data, we use it, but if it's less than 6, we fill with defaults to be consistent
-        if (productsData.length < 6) {
-          const missing = STANDARD_PRODUCT_TEMPLATE.slice(productsData.length);
-          setProducts([...productsData, ...missing]);
-        } else {
-          setProducts(productsData);
+    try {
+      // 1. 连通性测试
+      const { error: pingError } = await supabase.from('site_config').select('key').limit(1);
+      if (pingError) {
+        if (pingError.message.includes('Failed to fetch')) {
+          setConnStatus('error');
         }
       } else {
-        // If DB is empty, use defaults
-        setProducts(STANDARD_PRODUCT_TEMPLATE);
+        setConnStatus('connected');
       }
+
+      // 2. 获取配置
+      const { data: configData } = await supabase.from('site_config').select('*');
+      if (configData) {
+        const configObj = configData.reduce((acc: any, item: any) => {
+          acc[item.key] = item.value;
+          return acc;
+        }, {});
+        setSiteConfig(configObj);
+      }
+      
+      // 3. 获取产品 (服务矩阵)
+      const { data: productsData, error: pErr } = await supabase
+        .from('products')
+        .select('*')
+        .order('id');
+      
+      if (pErr) throw pErr;
+
+      if (productsData && productsData.length > 0) {
+        setProducts(productsData.map(p => ({
+          ...p,
+          id: Number(p.id),
+          features: typeof p.features === 'string' ? p.features : JSON.stringify(p.features)
+        })));
+      } else {
+        // 如果云端是空的，本地展示标准 6 模块
+        console.log('Database empty, initializing with defaults');
+        setProducts(STANDARD_PRODUCT_TEMPLATE.map(p => ({ ...p, id: Number(p.id) })));
+      }
+      
+      // 4. 获取线索
+      const { data: leadsData } = await supabase
+        .from('leads')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (leadsData) setLeads(leadsData);
+      
+      // 清空本地删除记录
+      setDeletedProductIds([]);
+    } catch (error: any) {
+      console.error('Fetch error:', error);
+      setConnStatus('error');
+    } finally {
+      setLoading(false);
     }
-    if (leadsData) setLeads(leadsData);
-    setLoading(false);
   };
 
   const handleUpdateConfig = (key: string, value: any) => {
@@ -147,15 +190,105 @@ export const AdminDashboard = () => {
     return safeJsonParse(val, defaultVal);
   };
 
-  const handleSaveConfig = async () => {
+  const handleGlobalSync = async () => {
+    // 基础连接项检查
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (!supabaseUrl || supabaseUrl === 'https://placeholder.supabase.co' || supabaseUrl.includes('placeholder')) {
+      alert('【连接受限】检测到 VITE_SUPABASE_URL 尚未正确配置。请在 Settings 菜单或 .env 文件中填入真实的 Supabase 项目地址与 Anon Key。');
+      return;
+    }
+
     setSaving(true);
+    let successCount = 0;
+    
     try {
-      for (const key of Object.keys(siteConfig)) {
-        await supabase.from('site_config').upsert({ key, value: siteConfig[key] }, { onConflict: 'key' });
+      console.log('--- 启动全量镜像同步 ---');
+
+      // 1. 同步全站基础配置 (Site Config) - 使用 Upsert 保持增量更新
+      const configEntries = Object.keys(siteConfig).map(key => ({ 
+        key, 
+        value: siteConfig[key] 
+      }));
+      
+      const { error: configError } = await supabase.from('site_config').upsert(configEntries, { onConflict: 'key' });
+      if (configError) throw new Error(`站点基础配置同步出错: ${configError.message}`);
+      
+      // 2. 产品矩阵镜像同步 (Resilient Mirror Sync)
+      // 策略：不再暴力全量清空（避免触发 Identity 列插入限制），而是：
+      // (1) 获取云端所有可用 ID
+      // (2) 找出云端多余的 ID 并删除
+      // (3) 对本地所有项执行 Upsert (有就更，没就加)
+      
+      console.log('正在获取云端现有数据现状...');
+      const { data: cloudProducts, error: fetchCloudError } = await supabase.from('products').select('id');
+      
+      if (!fetchCloudError) {
+        const cloudIds = (cloudProducts || []).map(cp => Number(cp.id));
+        const localIds = products.map(p => Number(p.id));
+        const idsToDelete = cloudIds.filter(cid => !localIds.includes(cid));
+        
+        if (idsToDelete.length > 0) {
+          console.log('清理云端冗余模块:', idsToDelete);
+          await supabase.from('products').delete().in('id', idsToDelete);
+        }
       }
-      alert('配置已同步到线上！');
-    } catch (e) {
-      alert('同步失败');
+
+      console.log('正在并行分发产品矩阵数据...', products.length);
+      const syncPayloads = products.map(p => {
+        const { created_at, _isNew, ...rest } = p;
+        const features = typeof rest.features === 'string' 
+          ? safeJsonParse(rest.features, []) 
+          : rest.features;
+
+        return {
+          id: Number(p.id),
+          title: rest.title || '未命名模块',
+          description: rest.description || '',
+          price: rest.price || '咨询洽谈',
+          image_url: rest.image_url || 'Briefcase',
+          stage: rest.stage || '',
+          features: Array.isArray(features) ? features : []
+        };
+      });
+
+      if (syncPayloads.length > 0) {
+        // 使用 Upsert 而不是 Insert 解决冲突并绕过 identity 限制（如果项已存在）
+        const { error: upsertError } = await supabase.from('products').upsert(syncPayloads, { onConflict: 'id' });
+        
+        if (upsertError) {
+          console.warn('批量 Upsert 受阻，启动降级逐行同步...', upsertError.message);
+          const isIdentityError = upsertError.message.includes('non-DEFAULT value');
+          const isStageMissing = upsertError.message.includes('column "stage" does not exist');
+          
+          for (const payload of syncPayloads) {
+            const finalPayload = { ...payload };
+            if (isStageMissing) delete (finalPayload as any).stage;
+            
+            // 降级尝试：如果项存在，由于 Identity 限制，Insert 肯定失败，但 Upsert 可能失败（如果底层转 Insert）。
+            // 这里我们用 Upsert 以覆盖为主。
+            const { error: rowError } = await supabase.from('products').upsert(finalPayload, { onConflict: 'id' });
+            
+            if (rowError) {
+              console.error(`模块 [${payload.id}] 同步失败:`, rowError.message);
+              // 如果是严重的 identity 错误且项不存在，这里可能依旧会报。
+            } else {
+              successCount++;
+            }
+          }
+        } else {
+          successCount = syncPayloads.length;
+        }
+      }
+
+      const statusMsg = syncPayloads.length === successCount 
+        ? '同步成功！产品矩阵与全站配置已实时生效。' 
+        : `部分完成：成功同步 ${successCount}/${syncPayloads.length} 个产品模块，请刷新重试或检查字段。`;
+
+      alert(statusMsg);
+      await fetchData(); 
+    } catch (e: any) {
+      console.error('CRITICAL SYNC FAIL:', e);
+      alert('同步失败：' + (e.message || '网络连接或数据库权限异常，请检查配置。'));
     } finally {
       setSaving(false);
     }
@@ -166,90 +299,26 @@ export const AdminDashboard = () => {
   };
 
   const addProduct = () => {
-    const nextId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+    const nextId = products.length > 0 ? Math.max(...products.map(p => Number(p.id))) + 1 : 1;
     const newProduct = {
       id: nextId,
-      title: '新服务模块',
-      description: '简短描述该模块的核心价值...',
+      title: '新服务板块',
+      description: '点击编辑描述...',
       price: '咨询洽谈',
       image_url: 'Briefcase',
       stage: '全周期赋能',
-      features: JSON.stringify(["服务项1", "服务项2"])
+      features: JSON.stringify(["核心功能 A", "核心功能 B"]),
     };
     setProducts([...products, newProduct]);
   };
 
   const deleteProduct = (id: number) => {
-    if (confirm('确定要删除这个产品模块吗？')) {
-      setProducts(products.filter(p => p.id !== id));
-    }
+    // Removed confirm as it can be problematic in some environments and user reported issues
+    setProducts(products.filter(p => Number(p.id) !== Number(id)));
+    setDeletedProductIds(prev => [...prev, id]);
   };
 
-  const handleSaveProducts = async () => {
-    setSaving(true);
-    try {
-      // Use upsert to handle both existing and new products more reliably
-      const syncData = products.map(({ created_at, ...p }) => p);
-      const { error } = await supabase.from('products').upsert(syncData);
-      
-      if (error) {
-        console.error('Supabase Upsert Error:', error);
-        // If it failed because of 'stage' column, try without it
-        if (error.message.includes('column "stage" does not exist')) {
-          const { error: retryError } = await supabase.from('products').upsert(syncData.map(({ stage, ...p }: any) => p));
-          if (retryError) throw retryError;
-        } else {
-          throw error;
-        }
-      }
-      alert('产品服务矩阵已即时同步！');
-      fetchData(); // Refresh state after save
-    } catch (e: any) {
-      console.error(e);
-      alert('同步失败: ' + (e.message || '未知错误'));
-    } finally {
-      setSaving(false);
-    }
-  };
 
-  const handleResetToStandard = async () => {
-    if (!confirm('确定要重置为标准的 6 大产品模块吗？这会覆盖当前的所有产品。')) return;
-    setSaving(true);
-    try {
-      // 1. Thoroughly clear the products table
-      const { error: delError } = await supabase.from('products').delete().gte('id', 0);
-      if (delError) {
-        console.error('Delete error:', delError);
-        // If delete fails, try a different approach if possible, but neq('id', -2) is usually safe
-        await supabase.from('products').delete().neq('id', -2);
-      }
-
-      // 2. Prepare data for insertion
-      // We pass the exact template with mapped features for DB storage
-      const dataToInsert = DEFAULT_PRODUCTS.map(({ id, ...rest }) => ({
-        ...rest,
-        features: JSON.stringify(rest.features)
-      }));
-
-      // 3. Perform a fresh insert
-      const { error: insError } = await supabase.from('products').insert(dataToInsert);
-      
-      if (insError) {
-        console.error('Reset Insert Error:', insError);
-        // Fallback to upsert if insert fails for some reason
-        const { error: upsertError } = await supabase.from('products').upsert(dataToInsert);
-        if (upsertError) throw upsertError;
-      }
-      
-      await fetchData();
-      alert('已成功重置为标准 6 大模块矩阵！');
-    } catch (e: any) {
-      console.error(e);
-      alert('重置失败: ' + (e.message || '未知错误'));
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -393,29 +462,38 @@ export const AdminDashboard = () => {
       {/* Main Content */}
       <main className="flex-grow p-6 md:p-12 overflow-y-auto">
         <div className="max-w-6xl mx-auto">
-          <header className="flex items-center justify-between mb-12">
+          <header className="flex flex-col lg:flex-row lg:items-center justify-between mb-12 gap-6">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
-                {activeTab === 'navbar' && '站点导航与全局配置'}
-                {activeTab === 'hero' && '可视化标题管理'}
-                {activeTab === 'about' && '关于我们页面编辑'}
-                {activeTab === 'service-path' && '服务路径与步骤管理'}
-                {activeTab === 'pain-points' && '核心痛点互动编辑器'}
-                {activeTab === 'products' && '产品矩阵与二级页管理'}
-                {activeTab === 'industries' && '行业解决方案管理'}
-                {activeTab === 'contact' && '表单与联系方式设置'}
-                {activeTab === 'leads' && '网站咨询线索 (Leads)'}
-              </h1>
-              <p className="text-gray-500 mt-2">修改后请同步，新内容将即时呈现在官网中。</p>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
+                  {activeTab === 'navbar' && '站点导航与全局配置'}
+                  {activeTab === 'hero' && '可视化标题管理'}
+                  {activeTab === 'about' && '关于我们页面编辑'}
+                  {activeTab === 'service-path' && '服务路径与步骤管理'}
+                  {activeTab === 'pain-points' && '核心痛点互动编辑器'}
+                  {activeTab === 'products' && '产品矩阵与二级页管理'}
+                  {activeTab === 'industries' && '行业解决方案管理'}
+                  {activeTab === 'contact' && '表单与联系方式设置'}
+                  {activeTab === 'leads' && '网站咨询线索 (Leads)'}
+                </h1>
+                {connStatus === 'error' && (
+                  <span className="bg-red-100 text-red-600 text-[10px] px-2 py-1 rounded font-black animate-pulse">DB DISCONNECTED</span>
+                )}
+                {connStatus === 'connected' && (
+                  <span className="bg-green-100 text-green-600 text-[10px] px-2 py-1 rounded font-black">SYNC ACTIVE</span>
+                )}
+              </div>
+              <p className="text-gray-500">修改后请同步，新内容将即时呈现在官网中。</p>
             </div>
             
-            <button 
-              onClick={activeTab === 'products' ? handleSaveProducts : handleSaveConfig}
-              disabled={saving}
-              className="flex items-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/30 disabled:opacity-50"
-            >
-              <Save size={20} /> {saving ? '正在同步云端...' : '立即同步至线上'}
-            </button>
+                    <button 
+                      type="button"
+                      onClick={handleGlobalSync}
+                      disabled={saving}
+                      className="flex items-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-600/30 disabled:opacity-50"
+                    >
+                      <Save size={20} /> {saving ? '正在同步云端...' : '提交并同步至线上'}
+                    </button>
           </header>
 
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -452,11 +530,19 @@ export const AdminDashboard = () => {
                     <div className="w-full min-h-[120px] bg-slate-100 rounded-3xl overflow-hidden mb-4 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-6 transition-all hover:bg-slate-50">
                       {siteConfig.logo_url ? (
                         <div className="flex flex-col items-center justify-center bg-white p-2 rounded-xl shadow-inner w-24 h-24 border border-slate-100 overflow-hidden">
-                          <img 
-                            src={siteConfig.logo_url} 
-                            className="max-w-full max-h-full object-contain"
-                            referrerPolicy="no-referrer"
-                          />
+                          {(() => {
+                            const img = siteConfig.logo_url || '';
+                            const isDataImage = img.startsWith('data:');
+                            const isUrlImage = img.startsWith('http') || img.startsWith('/');
+                            const displayUrl = img;
+                            return (
+                              <img 
+                                src={displayUrl} 
+                                className="max-w-full max-h-full object-contain"
+                                referrerPolicy="no-referrer"
+                              />
+                            );
+                          })()}
                         </div>
                       ) : (
                         <div className="flex flex-col items-center gap-2">
@@ -784,37 +870,58 @@ export const AdminDashboard = () => {
                 <div className="flex justify-between items-center bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
                   <div>
                     <h3 className="font-bold text-lg">产品矩阵模块管理</h3>
-                    <p className="text-sm">
-                      {products.length === 6 
-                        ? <span className="text-green-500 font-bold">已同步标准 6 模块体系</span>
-                        : <span className="text-amber-500 font-bold underline">检测到模块数量异常 ({products.length})，建议立即重置</span>
-                      }
-                    </p>
+                    <p className="text-sm text-slate-400">建议保持标准 6 大模块，点击可删除或新增自定义项</p>
                   </div>
-                  <div className="flex flex-col md:flex-row gap-4 items-center">
-                    <button 
-                      onClick={handleResetToStandard} 
-                      className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all shadow-lg ${products.length !== 6 ? 'bg-orange-500 text-white hover:bg-orange-600 animate-pulse' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20'}`}
-                    >
-                      <Zap size={18}/> {products.length !== 6 ? '立即修复并重置为标准 6 模块' : '重置为标准模块'}
-                    </button>
-                    <button onClick={addProduct} className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all shadow-lg"><Plus size={18}/> 新增自定义模块</button>
+                  <div className="flex gap-4 items-center">
+                    <button onClick={addProduct} className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all shadow-lg"><Plus size={18}/> 新增模块</button>
                   </div>
                 </div>
 
                 {products.map((product) => (
-                  <div key={product.id} className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 relative group">
-                    <button onClick={() => deleteProduct(product.id)} className="absolute top-6 right-6 p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
-                      <Trash2 size={20} />
-                    </button>
+                  <div key={product.id} className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 relative group transition-all hover:border-blue-200">
+                    <div className="absolute top-6 right-6 flex items-center gap-2 z-20">
+                       <span className="text-[10px] font-mono text-slate-300">ID: {product.id}</span>
+                       <button 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          deleteProduct(product.id);
+                        }} 
+                        className="p-3 bg-red-50 text-red-400 hover:bg-red-500 hover:text-white rounded-2xl transition-all shadow-sm active:scale-95"
+                        title="删除此模块"
+                       >
+                        <Trash2 size={18} />
+                       </button>
+                    </div>
                     <div className="flex flex-col lg:flex-row gap-12">
                       <div className="lg:w-1/3 space-y-6">
                         <div className="w-full aspect-video rounded-3xl bg-slate-100 overflow-hidden border border-slate-200 mb-4">
-                          <img 
-                            src={product.image_url.startsWith('http') || product.image_url.startsWith('data:') ? product.image_url : `https://picsum.photos/seed/${product.image_url}/800/600`} 
-                            className="w-full h-full object-cover" 
-                            referrerPolicy="no-referrer"
-                          />
+                          {(() => {
+                            const imageUrl = product.image_url || '';
+                            const isDataImage = imageUrl.startsWith('data:');
+                            const isUrlImage = imageUrl.startsWith('http') || imageUrl.startsWith('/');
+                            const isExternalImage = isDataImage || isUrlImage || (imageUrl.includes('.') && imageUrl.length > 5);
+                            
+                            const displayUrl = imageUrl;
+                            // Add cache buster for external images to force refresh
+                            const finalSrc = isExternalImage 
+                              ? (imageUrl.startsWith('data:') ? displayUrl : `${displayUrl}${displayUrl.includes('?') ? '&' : '?'}t=${Date.now()}`)
+                              : `https://picsum.photos/seed/${product.id}/800/600`;
+
+                            return (
+                              <img 
+                                key={imageUrl}
+                                src={finalSrc} 
+                                className="w-full h-full object-cover" 
+                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  if (!target.src.includes('picsum.photos') && !isDataImage) {
+                                    target.src = `https://picsum.photos/seed/${product.id}/800/600`;
+                                  }
+                                }}
+                              />
+                            );
+                          })()}
                         </div>
                         <ImageUploadField 
                           label="产品封面"

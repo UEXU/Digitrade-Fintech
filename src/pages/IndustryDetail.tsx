@@ -38,6 +38,10 @@ export const IndustryDetail = () => {
     };
     fetchIndustry();
     window.scrollTo(0, 0);
+
+    const handleFocus = () => fetchIndustry();
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, [id]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center italic text-slate-400">正在开启方案详情...</div>;
@@ -60,11 +64,31 @@ export const IndustryDetail = () => {
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 overflow-hidden bg-slate-900">
         <div className="absolute inset-0 z-0">
-          <img 
-            src={industry.image} 
-            className="w-full h-full object-cover opacity-40 blur-sm scale-110" 
-            referrerPolicy="no-referrer"
-          />
+          {(() => {
+            const imageUrl = industry.image || '';
+            const isDataImage = imageUrl.startsWith('data:');
+            const isUrlImage = imageUrl.startsWith('http') || imageUrl.startsWith('/');
+            const isExternalImage = isDataImage || isUrlImage || (imageUrl.includes('.') && imageUrl.length > 4);
+            
+            const displayUrl = isUrlImage && !isDataImage
+              ? (imageUrl.includes('?') ? `${imageUrl}&v=${Date.now()}` : `${imageUrl}?v=${Date.now()}`)
+              : imageUrl;
+
+            return (
+              <img 
+                key={imageUrl}
+                src={isExternalImage ? displayUrl : `https://picsum.photos/seed/${imageUrl || industry.name}/1920/1080`} 
+                className="w-full h-full object-cover opacity-40 blur-sm scale-110" 
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (!target.src.includes('picsum.photos')) {
+                    target.src = `https://picsum.photos/seed/${industry.name}/1920/1080`;
+                  }
+                }}
+              />
+            );
+          })()}
           <div className="absolute inset-0 bg-gradient-to-b from-slate-900/60 via-slate-900 to-slate-900"></div>
         </div>
         

@@ -68,7 +68,11 @@ export const HomePage = () => {
     const fetchData = async () => {
       try {
         const { data: configData, error: configError } = await supabase.from('site_config').select('*');
-        const { data: productsData, error: productsError } = await supabase.from('products').select('*').order('id');
+        const { data: productsData, error: productsError } = await supabase
+          .from('products')
+          .select('*')
+          .order('id')
+          .limit(20); 
 
         if (configError || productsError) {
           console.warn('Supabase fetch failed, using defaults:', configError || productsError);
@@ -85,19 +89,14 @@ export const HomePage = () => {
         }
 
         if (productsData && productsData.length > 0) {
-          // Map products to ensure they have default values for missing fields like 'stage'
-          const mappedProducts = productsData.map((p: any) => ({
+          const dbProducts = productsData.map((p: any) => ({
             ...p,
-            stage: p.stage || (p.id === 1 ? '决策引导' : p.id === 2 ? '合规落地' : p.id === 3 ? '市场增长' : p.id === 4 ? '团队运营' : p.id === 5 ? '财税合规' : '资源生态')
+            id: Number(p.id),
+            features: typeof p.features === 'string' ? safeJsonParse(p.features, []) : (Array.isArray(p.features) ? p.features : []),
+            stage: p.stage || (p.id == 1 ? '决策引导' : p.id == 2 ? '合规落地' : p.id == 3 ? '市场增长' : p.id == 4 ? '团队运营' : p.id == 5 ? '财税合规' : '资源生态')
           }));
-          
-          // Ensure we show at least 6 modules even if DB has fewer
-          if (mappedProducts.length < 6) {
-            const missing = DEFAULT_PRODUCTS.slice(mappedProducts.length);
-            setProducts([...mappedProducts, ...missing]);
-          } else {
-            setProducts(mappedProducts);
-          }
+
+          setProducts(dbProducts);
         } else {
           setProducts(DEFAULT_PRODUCTS);
         }
@@ -109,6 +108,14 @@ export const HomePage = () => {
     };
 
     fetchData();
+
+    // Auto-refresh when tab comes back into focus
+    const handleFocus = () => {
+      console.log('Tab focused, checking for updates...');
+      fetchData();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   if (loading) {

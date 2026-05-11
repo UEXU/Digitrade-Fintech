@@ -15,7 +15,7 @@ export const Hero = ({ title, subtitle, bgImage, btn1Text, btn2Text }: HeroProps
     <section className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-slate-900">
       <div className="absolute inset-0 z-0">
         <img 
-          src={bgImage || "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&q=80&w=1920"} 
+          src={bgImage ? (bgImage.startsWith('data:') ? bgImage : `${bgImage}${bgImage.includes('?') ? '&' : '?'}t=${Date.now()}`) : "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&q=80&w=1920"} 
           alt="Sydney" 
           className="w-full h-full object-cover opacity-40"
           referrerPolicy="no-referrer"

@@ -18,12 +18,24 @@ interface ServicesProps {
 }
 
 const getIcon = (iconName: string, index: number) => {
-  if (iconName === 'strategy' || index === 0) return <Globe className="w-6 h-6" />;
-  if (iconName === 'localization' || index === 1) return <ShieldCheck className="w-6 h-6" />;
-  if (iconName === 'growth' || index === 2) return <TrendingUp className="w-6 h-6" />;
-  if (index === 3) return <Users className="w-6 h-6" />;
-  if (index === 4) return <Scale className="w-6 h-6" />;
-  if (index === 5) return <Landmark className="w-6 h-6" />;
+  const isInternalIcon = ['strategy', 'localization', 'growth', 'Briefcase', 'Search', 'MapPin', 'TrendingUp', 'Globe', 'ShieldCheck', 'Users', 'Building2', 'Zap'].includes(iconName);
+  const isImage = iconName && (iconName.startsWith('data:') || iconName.startsWith('http') || (iconName.includes('.') && iconName.length > 4));
+  const effectiveIcon = (isImage || !iconName) ? '' : iconName;
+
+  if (effectiveIcon === 'strategy') return <Globe className="w-6 h-6" />;
+  if (effectiveIcon === 'localization') return <ShieldCheck className="w-6 h-6" />;
+  if (effectiveIcon === 'growth') return <TrendingUp className="w-6 h-6" />;
+  
+  // Position based defaults if no image and no specific keyword
+  if (!isImage) {
+    if (index === 0) return <Globe className="w-6 h-6" />;
+    if (index === 1) return <ShieldCheck className="w-6 h-6" />;
+    if (index === 2) return <TrendingUp className="w-6 h-6" />;
+    if (index === 3) return <Users className="w-6 h-6" />;
+    if (index === 4) return <Scale className="w-6 h-6" />;
+    if (index === 5) return <Landmark className="w-6 h-6" />;
+  }
+  
   return <Briefcase className="w-6 h-6" />;
 };
 
@@ -41,12 +53,19 @@ export const Services = ({ products }: ServicesProps) => {
         </div>
 
         <div className="space-y-24">
-          {[0, 1, 2].map((phaseIdx) => {
-            const phaseInfo = [
-              { title: 'Phase 01：合规着陆', desc: 'Entry & Landing - 确保合法经营，降低准入风险', color: 'bg-blue-600' },
-              { title: 'Phase 02：销售增长', desc: 'Growth & Operations - 品牌本地化，建立销售通路', color: 'bg-indigo-600' },
-              { title: 'Phase 03：稳健运营', desc: 'Scale & Ecosystem - 财税合规，政府与资源深度对接', color: 'bg-violet-600' }
-            ][phaseIdx];
+          {Array.from({ length: Math.ceil(products.length / 2) }).map((_, phaseIdx) => {
+            const phaseColors = ['bg-blue-600', 'bg-indigo-600', 'bg-violet-600', 'bg-slate-900'];
+            const phaseTitles = [
+              { title: 'Phase 01：合规着陆', desc: 'Entry & Landing - 确保合法经营，降低准入风险' },
+              { title: 'Phase 02：销售增长', desc: 'Growth & Operations - 品牌本地化，建立销售通路' },
+              { title: 'Phase 03：稳健运营', desc: 'Scale & Ecosystem - 财税合规，政府与资源深度对接' }
+            ];
+            
+            const currentPhase = phaseTitles[phaseIdx] || { 
+              title: `Phase 0${phaseIdx + 1}：更多方案`, 
+              desc: 'Expansion - 持续优化的出海服务方案' 
+            };
+            const phaseColor = phaseColors[phaseIdx % phaseColors.length];
             
             const phaseProducts = products.slice(phaseIdx * 2, (phaseIdx * 2) + 2);
 
@@ -54,38 +73,57 @@ export const Services = ({ products }: ServicesProps) => {
               <div key={phaseIdx} className="space-y-12">
                 <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-200 pb-8 gap-4">
                   <div>
-                    <span className={`inline-block px-4 py-1.5 rounded-xl ${phaseInfo.color} text-white text-[10px] font-black tracking-widest uppercase mb-4`}>
-                      {phaseInfo.title.split('：')[0]}
+                    <span className={`inline-block px-4 py-1.5 rounded-xl ${phaseColor} text-white text-[10px] font-black tracking-widest uppercase mb-4`}>
+                      {currentPhase.title.split('：')[0]}
                     </span>
-                    <h3 className="text-3xl font-black text-slate-900 tracking-tight">{phaseInfo.title.split('：')[1]}</h3>
+                    <h3 className="text-3xl font-black text-slate-900 tracking-tight">{currentPhase.title.split('：')[1]}</h3>
                   </div>
-                  <p className="text-slate-400 font-bold tracking-wide text-sm">{phaseInfo.desc}</p>
+                  <p className="text-slate-400 font-bold tracking-wide text-sm">{currentPhase.desc}</p>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
                   {phaseProducts.map((product, pIdx) => {
                     const absIndex = (phaseIdx * 2) + pIdx;
                     const featuresArray = safeJsonParse(product.features);
-                    const isExternalImage = product.image_url?.startsWith('http') || product.image_url?.startsWith('data:');
+                    const imageUrl = product.image_url || '';
+                    
+                    const isDataImage = imageUrl.startsWith('data:');
+                    const isUrlImage = imageUrl.startsWith('http') || imageUrl.startsWith('/');
+                    const isExternalImage = isDataImage || isUrlImage || (imageUrl.includes('.') && imageUrl.length > 5);
+ 
+                    const displayUrl = imageUrl;
+                    // Add cache buster for external images to force refresh, but NOT for data URLs
+                    const finalSrc = isExternalImage 
+                      ? (imageUrl.startsWith('data:') ? displayUrl : `${displayUrl}${displayUrl.includes('?') ? '&' : '?'}t=${Date.now()}`)
+                      : `https://picsum.photos/seed/${product.id || absIndex}/800/600`;
 
                     return (
                       <div 
-                        key={product.id || absIndex} 
+                        key={`${product.id}-${absIndex}`} 
                         className="group relative flex flex-col bg-white rounded-[3rem] shadow-xl shadow-slate-200/40 border border-slate-100 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl overflow-hidden"
                       >
+                        <Link to="/products" className="absolute inset-0 z-10" />
                         {/* Service Image Area */}
-                        <div className="relative h-48 sm:h-56 overflow-hidden">
+                        <div className="relative h-48 sm:h-56 overflow-hidden bg-slate-100">
                           <img 
-                            src={isExternalImage ? product.image_url : `https://picsum.photos/seed/${product.image_url || 'service' + absIndex}/800/600`} 
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                            key={imageUrl}
+                            src={finalSrc} 
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 shadow-inner" 
                             alt={product.title}
                             referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              // Avoid infinite loops and don't fall back to random strawberries
+                              if (!target.src.includes('picsum.photos') && !isDataImage) {
+                                target.src = `https://picsum.photos/seed/${product.id || absIndex}/800/600`;
+                              }
+                            }}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60"></div>
                           
                           {/* Module Badge Overlay */}
                           <div className="absolute top-6 left-6">
-                            <div className={`w-12 h-12 ${phaseInfo.color} rounded-2xl flex items-center justify-center text-white shadow-xl backdrop-blur-sm bg-opacity-90`}>
+                            <div className={`w-12 h-12 ${phaseColor} rounded-2xl flex items-center justify-center text-white shadow-xl backdrop-blur-sm bg-opacity-90`}>
                               {getIcon(product.image_url, absIndex)}
                             </div>
                           </div>
@@ -120,7 +158,7 @@ export const Services = ({ products }: ServicesProps) => {
                             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               {featuresArray?.slice(0, 6).map((f: string, i: number) => (
                                 <li key={i} className="flex items-start gap-3 group/item">
-                                  <div className={`mt-1.5 w-1.5 h-1.5 rounded-full ${phaseInfo.color} opacity-20 group-hover/item:opacity-100 transition-all duration-300`} />
+                                  <div className={`mt-1.5 w-1.5 h-1.5 rounded-full ${phaseColor} opacity-20 group-hover/item:opacity-100 transition-all duration-300`} />
                                   <span className="text-[11px] font-bold text-slate-600 group-hover/item:text-slate-900 transition-colors">{f}</span>
                                 </li>
                               ))}

@@ -19,17 +19,11 @@ export const ProductMatrix = () => {
       const { data: configData } = await supabase.from('site_config').select('*');
       
       if (productsData && productsData.length > 0) {
-        const mappedProducts = productsData.map((p: any) => ({
+        setProducts(productsData.map((p: any) => ({
           ...p,
-          stage: p.stage || (p.id === 1 ? '决策引导' : p.id === 2 ? '合规落地' : p.id === 3 ? '市场增长' : p.id === 4 ? '团队运营' : p.id === 5 ? '财税合规' : '资源生态')
-        }));
-        
-        if (mappedProducts.length < 6) {
-          const missing = DEFAULT_PRODUCTS.slice(mappedProducts.length);
-          setProducts([...mappedProducts, ...missing]);
-        } else {
-          setProducts(mappedProducts);
-        }
+          id: Number(p.id),
+          stage: p.stage || (p.id == 1 ? '决策引导' : p.id == 2 ? '合规落地' : p.id == 3 ? '市场增长' : p.id == 4 ? '团队运营' : p.id == 5 ? '财税合规' : '资源生态')
+        })));
       } else {
         setProducts(DEFAULT_PRODUCTS);
       }
@@ -44,6 +38,10 @@ export const ProductMatrix = () => {
     };
     fetchData();
     window.scrollTo(0, 0);
+
+    const handleFocus = () => fetchData();
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center italic text-slate-400 font-medium">正在同步产品矩阵数据...</div>;
@@ -85,13 +83,31 @@ export const ProductMatrix = () => {
                 className="bg-white rounded-[40px] overflow-hidden shadow-sm border border-slate-100 flex flex-col hover:shadow-xl transition-all duration-500 group"
               >
                 {/* Image Section */}
-                <div className="relative h-64 overflow-hidden">
-                  <img 
-                    src={product.image_url.startsWith('http') ? product.image_url : `https://picsum.photos/seed/${product.image_url}/800/600`} 
-                    alt={product.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    referrerPolicy="no-referrer"
-                  />
+                <div className="relative h-64 overflow-hidden bg-slate-100">
+                  {(() => {
+                    const imageUrl = product.image_url || '';
+                    const isDataImage = imageUrl.startsWith('data:');
+                    const isUrlImage = imageUrl.startsWith('http') || imageUrl.startsWith('/');
+                    const isExternalImage = isDataImage || isUrlImage || (imageUrl.includes('.') && imageUrl.length > 5);
+                    
+                    const displayUrl = imageUrl;
+
+                    return (
+                      <img 
+                        key={`${product.id}-${imageUrl.substring(0, 50)}`}
+                        src={isExternalImage ? displayUrl : `https://picsum.photos/seed/${product.id}/800/600`} 
+                        alt={product.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          if (!target.src.includes('picsum.photos') && !isDataImage) {
+                            target.src = `https://picsum.photos/seed/${product.id}/800/600`;
+                          }
+                        }}
+                      />
+                    );
+                  })()}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
                   <div className="absolute bottom-6 left-8">
                     <span className="inline-block px-3 py-1 rounded-full bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest mb-2 shadow-lg shadow-blue-600/30">

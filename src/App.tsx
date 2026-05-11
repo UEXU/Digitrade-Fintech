@@ -18,6 +18,8 @@ export default function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
+        <Route path="/products" element={<ProductMatrix />} />
+        <Route path="/industry/:id" element={<IndustryDetail />} />
         
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />

@@ -27,12 +27,25 @@ export const Navbar = ({ logoText, logoSubtitle, logoUrl, links }: { logoText?: 
         <Link to="/" className="flex items-center gap-3">
           {logoUrl ? (
             <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shrink-0 rounded-xl overflow-hidden border border-slate-100 bg-white shadow-sm">
-              <img 
-                src={logoUrl} 
-                alt={logoText || '数贸融出海服务'} 
-                className="max-w-full max-h-full object-contain p-1" 
-                referrerPolicy="no-referrer"
-              />
+              {(() => {
+                const img = logoUrl || '';
+                const isDataImage = img.startsWith('data:');
+                const isUrlImage = img.startsWith('http') || img.startsWith('/');
+                
+                const displayUrl = isUrlImage && !isDataImage
+                  ? (img.includes('?') ? `${img}&v=${Date.now()}` : `${img}?v=${Date.now()}`)
+                  : img;
+                
+                return (
+                  <img 
+                    key={logoUrl}
+                    src={displayUrl} 
+                    alt={logoText || '数贸融出海服务'} 
+                    className="max-w-full max-h-full object-contain p-1" 
+                    referrerPolicy="no-referrer"
+                  />
+                );
+              })()}
             </div>
           ) : (
             <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shrink-0">
