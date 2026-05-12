@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe, Users, TrendingUp, CheckCircle2, ChevronRight, Briefcase, ShieldCheck, Scale, Landmark } from 'lucide-react';
+import { getLucideIcon } from '../../lib/icons';
 import { Link } from 'react-router-dom';
 import { safeJsonParse } from '../../lib/utils';
 
@@ -15,40 +15,44 @@ interface Product {
 
 interface ServicesProps {
   products: Product[];
+  title?: string;
+  heading?: string;
+  description?: string;
 }
 
-const getIcon = (iconName: string, index: number) => {
-  const isInternalIcon = ['strategy', 'localization', 'growth', 'Briefcase', 'Search', 'MapPin', 'TrendingUp', 'Globe', 'ShieldCheck', 'Users', 'Building2', 'Zap'].includes(iconName);
+const getEffectiveIcon = (iconName: string, index: number) => {
   const isImage = iconName && (iconName.startsWith('data:') || iconName.startsWith('http') || (iconName.includes('.') && iconName.length > 4));
-  const effectiveIcon = (isImage || !iconName) ? '' : iconName;
+  
+  if (isImage) return null; // Component handles image separately or we return default icon
 
-  if (effectiveIcon === 'strategy') return <Globe className="w-6 h-6" />;
-  if (effectiveIcon === 'localization') return <ShieldCheck className="w-6 h-6" />;
-  if (effectiveIcon === 'growth') return <TrendingUp className="w-6 h-6" />;
+  // Mapping old keywords to new icons if mapping to centralized library
+  const mapping: Record<string, string> = {
+    'strategy': 'Globe',
+    'localization': 'ShieldCheck',
+    'growth': 'TrendingUp'
+  };
+
+  const name = mapping[iconName] || iconName;
   
-  // Position based defaults if no image and no specific keyword
-  if (!isImage) {
-    if (index === 0) return <Globe className="w-6 h-6" />;
-    if (index === 1) return <ShieldCheck className="w-6 h-6" />;
-    if (index === 2) return <TrendingUp className="w-6 h-6" />;
-    if (index === 3) return <Users className="w-6 h-6" />;
-    if (index === 4) return <Scale className="w-6 h-6" />;
-    if (index === 5) return <Landmark className="w-6 h-6" />;
+  // Default icons by index if nothing provided
+  if (!name) {
+    const defaults = ['Globe', 'ShieldCheck', 'TrendingUp', 'Users', 'Archive', 'Building2'];
+    return getLucideIcon(defaults[index % defaults.length]);
   }
-  
-  return <Briefcase className="w-6 h-6" />;
+
+  return getLucideIcon(name);
 };
 
-export const Services = ({ products }: ServicesProps) => {
+export const Services = ({ products, title, heading, description }: ServicesProps) => {
   return (
     <section id="services" className="py-24 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center text-center mb-20">
-          <h2 className="text-blue-600 font-bold tracking-[0.3em] uppercase text-sm mb-4">Service Architecture</h2>
-          <p className="text-4xl md:text-5xl font-black text-gray-900 mb-8 tracking-tight">“三阶六维”出海赋能全案</p>
+          <h2 className="text-blue-600 font-bold tracking-[0.3em] uppercase text-sm mb-4">{title || 'Service Architecture'}</h2>
+          <p className="text-4xl md:text-5xl font-black text-gray-900 mb-8 tracking-tight">{heading || '“三阶六维”出海赋能全案'}</p>
           <div className="w-24 h-1.5 bg-blue-600 rounded-full mb-8"></div>
           <p className="text-gray-500 text-lg max-w-3xl leading-relaxed font-medium">
-            针对赴澳企业不同阶段的痛点，精炼出三阶梯交付标准。从刚进入的决策对接到业务成熟后的资源整合，提供确定性的顾问式支持。
+            {description || '针对赴澳企业不同阶段的痛点，精炼出三阶梯交付标准。从刚进入的决策对接到业务成熟后的资源整合，提供确定性的顾问式支持。'}
           </p>
         </div>
 
@@ -121,12 +125,7 @@ export const Services = ({ products }: ServicesProps) => {
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60"></div>
                           
-                          {/* Module Badge Overlay */}
-                          <div className="absolute top-6 left-6">
-                            <div className={`w-12 h-12 ${phaseColor} rounded-2xl flex items-center justify-center text-white shadow-xl backdrop-blur-sm bg-opacity-90`}>
-                              {getIcon(product.image_url, absIndex)}
-                            </div>
-                          </div>
+                          {/* Module Badge Overlay REMOVED */}
 
                           <div className="absolute bottom-6 left-8 right-8">
                             <span className="text-[10px] font-black text-white/80 uppercase tracking-[0.3em] block mb-1">

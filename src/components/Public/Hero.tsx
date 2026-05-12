@@ -8,14 +8,24 @@ interface HeroProps {
   bgImage?: string;
   btn1Text?: string;
   btn2Text?: string;
+  badgeText?: string;
+  stats?: { value: string; label: string }[];
 }
 
-export const Hero = ({ title, subtitle, bgImage, btn1Text, btn2Text }: HeroProps) => {
+export const Hero = ({ title, subtitle, bgImage, btn1Text, btn2Text, badgeText, stats }: HeroProps) => {
+  const defaultStats = [
+    { value: '15+ 年', label: '中澳贸易深耕' },
+    { value: '500+', label: '服务企业案例' },
+    { value: '60%', label: '落地效率提升' }
+  ];
+
+  const displayStats = stats && stats.filter(s => s.value && s.label).length > 0 ? stats : defaultStats;
+
   return (
     <section className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-slate-900">
       <div className="absolute inset-0 z-0">
         <img 
-          src={bgImage ? (bgImage.startsWith('data:') ? bgImage : `${bgImage}${bgImage.includes('?') ? '&' : '?'}t=${Date.now()}`) : "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&q=80&w=1920"} 
+          src={bgImage || "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&q=80&w=1920"} 
           alt="Sydney" 
           className="w-full h-full object-cover opacity-40"
           referrerPolicy="no-referrer"
@@ -31,7 +41,7 @@ export const Hero = ({ title, subtitle, bgImage, btn1Text, btn2Text }: HeroProps
             transition={{ duration: 0.6 }}
           >
             <span className="inline-block px-4 py-1.5 rounded-full bg-blue-600/20 text-blue-400 text-xs font-bold tracking-widest uppercase mb-6 border border-blue-600/30">
-              澳洲出海一站式服务中心
+              {badgeText || '澳洲出海一站式服务中心'}
             </span>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.1] mb-8 whitespace-pre-line">
               {title || '让中国企业在澳洲\n真正落地与增长'}
@@ -68,18 +78,12 @@ export const Hero = ({ title, subtitle, bgImage, btn1Text, btn2Text }: HeroProps
             transition={{ delay: 0.8, duration: 1 }}
             className="mt-16 grid grid-cols-2 md:grid-cols-3 gap-8 border-t border-white/10 pt-8"
           >
-            <div>
-              <div className="text-3xl font-bold text-white mb-1">15+ 年</div>
-              <div className="text-sm text-gray-400 uppercase tracking-wider">中澳贸易深耕</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-white mb-1">500+</div>
-              <div className="text-sm text-gray-400 uppercase tracking-wider">服务企业案例</div>
-            </div>
-            <div className="hidden md:block">
-              <div className="text-3xl font-bold text-white mb-1">60%</div>
-              <div className="text-sm text-gray-400 uppercase tracking-wider">落地效率提升</div>
-            </div>
+            {displayStats.map((stat, idx) => (
+              <div key={idx} className={idx === 2 ? "hidden md:block" : ""}>
+                <div className="text-3xl font-bold text-white mb-1">{stat.value}</div>
+                <div className="text-sm text-gray-400 uppercase tracking-wider">{stat.label}</div>
+              </div>
+            ))}
           </motion.div>
         </div>
       </div>

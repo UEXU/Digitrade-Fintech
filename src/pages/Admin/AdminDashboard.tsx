@@ -17,7 +17,8 @@ import {
   Zap,
   Activity,
   Info,
-  FileText
+  FileText,
+  BarChart3
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { safeJsonParse } from '../../lib/utils';
@@ -116,19 +117,39 @@ export const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<'navbar' | 'hero' | 'about' | 'service-path' | 'products' | 'industries' | 'contact' | 'pain-points' | 'leads'>('navbar');
   const navigate = useNavigate();
 
+  const AVAILABLE_ICONS = [
+    { name: 'Search', label: '搜索 (Search)' },
+    { name: 'Globe', label: '全球 (Globe)' },
+    { name: 'ShieldCheck', label: '安全合规 (Shield)' },
+    { name: 'TrendingUp', label: '增长 (Growth)' },
+    { name: 'Users', label: '团队/伙伴 (Users)' },
+    { name: 'Building2', label: '产业/企业 (Building)' },
+    { name: 'Briefcase', label: '业务/方案 (Briefcase)' },
+    { name: 'Zap', label: '加速 (Zap)' },
+    { name: 'MapPin', label: '定位 (MapPin)' },
+    { name: 'Heart', label: '服务/关怀 (Heart)' },
+    { name: 'Star', label: '核心/星级 (Star)' },
+    { name: 'Award', label: '荣誉/品质 (Award)' },
+    { name: 'Clock', label: '效率 (Clock)' },
+    { name: 'MessageSquare', label: '咨询 (Chat)' },
+  ];
+
   useEffect(() => {
     fetchData();
   }, []);
 
+  const [lastError, setLastError] = useState<string | null>(null);
+
   const fetchData = async () => {
     setLoading(true);
+    setLastError(null);
     try {
       // 1. 连通性测试
       const { error: pingError } = await supabase.from('site_config').select('key').limit(1);
       if (pingError) {
-        if (pingError.message.includes('Failed to fetch')) {
-          setConnStatus('error');
-        }
+        console.error('DB Ping Error:', pingError);
+        setConnStatus('error');
+        setLastError(pingError.message);
       } else {
         setConnStatus('connected');
       }
@@ -216,10 +237,10 @@ export const AdminDashboard = () => {
   };
 
   const handleGlobalSync = async () => {
-    // 基础连接项检查
+    // Basic connectivity check
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    if (!supabaseUrl || supabaseUrl === 'https://placeholder.supabase.co' || supabaseUrl.includes('placeholder')) {
-      alert('【连接受限】检测到 VITE_SUPABASE_URL 尚未正确配置。请在 Settings 菜单或 .env 文件中填入真实的 Supabase 项目地址与 Anon Key。');
+    if (!supabaseUrl || supabaseUrl.includes('placeholder') || supabaseUrl.includes('your-project')) {
+      alert('【连接受限】检测到 VITE_SUPABASE_URL 尚未正确配置。请在 Settings -> Secrets 菜单中填入真实的 Supabase 项目地址与 API Key。');
       return;
     }
 
@@ -359,8 +380,21 @@ export const AdminDashboard = () => {
     navigate('/admin/login');
   };
 
+  const currentAboutFeatures = getConfig('about_features', [
+    { title: '● 深度本地化', desc: '不只是翻译，更是品牌灵魂的二次植入。' },
+    { title: '● 全链路覆盖', desc: '从0到1的冷启动，到1到10的规模化增长。' }
+  ]);
   const currentIndustries = getConfig('industries', []);
-  const currentPainPoints = getConfig('pain_points', []);
+  const currentPainPoints = getConfig('pain_points', [
+    { title: '信息不透明', desc: '不清楚澳洲市场准入规则，不了解注册、税务、签证等复杂流程。', more: '在澳洲，ABN注册、GST税务申报、ASIC合规要求等都与国内显著不同。缺乏本地向导极易导致合规性风险，甚至面临巨额罚款。', icon: 'Search' },
+    { title: '落地执行难', desc: '不知道如何注册公司、招聘人才、寻找本地供应链和资源。', more: '澳洲的劳动力成本极高， Fair Work 法规严格。如何在不熟悉的市场建立信任，筛选真正优质的本地供应商，是企业面临的第一个执行难题。', icon: 'MapPin' },
+    { title: '增长瓶颈大', desc: '产品卖不出去，品牌不被认可，缺乏本地化运营能力和渠道。', more: '出海不只是翻译文字。文化内核、消费习惯、媒体矩阵的巨大差异，使得传统的“中国模式”在澳洲往往失效。需要深度本地运营才能实现品牌心智占领。', icon: 'TrendingUp' },
+    { title: '服务严重割裂', desc: '咨询公司只讲战略，代办机构只做执行，没有人覆盖全流程。', more: 'Digitrade 整合了顶层商业设计到落地合规执行的闭环。我们不只给你报告，我们与您并肩走进市场，解决从0到1的每一个细节问题。', icon: 'Briefcase' }
+  ]);
+  const currentContactItems = getConfig('contact_items', [
+    { icon: 'Mail', label: '电子邮箱', value: 'info@digitradefintech.com' },
+    { icon: 'Phone', label: '联系电话', value: '+61 (07) 1234 5678 / +86 123 4567 8910' }
+  ]);
   const currentNavLinks = getConfig('navbar_links', [
     { name: '服务体系', href: '/#services' },
     { name: '行业方案', href: '/#industries' },
@@ -380,6 +414,18 @@ export const AdminDashboard = () => {
     { title: '产业嵌入', desc: 'Integrate' },
   ]);
 
+  const updateAboutFeatures = (newFeatures: any[]) => {
+    handleUpdateConfig('about_features', newFeatures);
+  };
+
+  const addAboutFeature = () => {
+    updateAboutFeatures([...currentAboutFeatures, { title: '● 新亮点', desc: '简短描述文字...' }]);
+  };
+
+  const deleteAboutFeature = (idx: number) => {
+    updateAboutFeatures(currentAboutFeatures.filter((_: any, i: number) => i !== idx));
+  };
+
   const updateIndustries = (newIndustries: any[]) => {
     handleUpdateConfig('industries', newIndustries);
   };
@@ -390,6 +436,10 @@ export const AdminDashboard = () => {
 
   const updateNavLinks = (newLinks: any[]) => {
     handleUpdateConfig('navbar_links', newLinks);
+  };
+
+  const updateContactItems = (newItems: any[]) => {
+    handleUpdateConfig('contact_items', newItems);
   };
 
   const updateFormFields = (newFields: any[]) => {
@@ -511,7 +561,9 @@ export const AdminDashboard = () => {
                   {activeTab === 'leads' && '网站咨询线索 (Leads)'}
                 </h1>
                 {connStatus === 'error' && (
-                  <span className="bg-red-100 text-red-600 text-[10px] px-2 py-1 rounded font-black animate-pulse">DB DISCONNECTED</span>
+                  <span className="bg-red-100 text-red-600 text-[10px] px-2 py-1 rounded font-black animate-pulse cursor-help" title={lastError || 'Unknown connection error'}>
+                    DB DISCONNECTED
+                  </span>
                 )}
                 {connStatus === 'connected' && (
                   <span className="bg-green-100 text-green-600 text-[10px] px-2 py-1 rounded font-black">SYNC ACTIVE</span>
@@ -604,6 +656,67 @@ export const AdminDashboard = () => {
                       value={siteConfig.footer_description || '专注于跨境贸易本土化全链路赋能的智能服务中心。我们不仅是服务提供者，更是客户的海外增长合伙人。'}
                       onChange={(e) => handleUpdateConfig('footer_description', e.target.value)}
                     />
+                  </div>
+
+                  <div className="space-y-4 border-t border-slate-50 pt-10">
+                    <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
+                      社交媒体与外部链接 (WeChat, LinkedIn 等)
+                    </label>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] text-slate-400">领英链接 (LinkedIn URL)</label>
+                        <input 
+                          className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm"
+                          value={siteConfig.social_linkedin || ''}
+                          onChange={(e) => handleUpdateConfig('social_linkedin', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] text-slate-400">领英图标</label>
+                        <select 
+                          className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-xs"
+                          value={siteConfig.social_linkedin_icon || 'Globe'}
+                          onChange={(e) => handleUpdateConfig('social_linkedin_icon', e.target.value)}
+                        >
+                          {AVAILABLE_ICONS.map(icon => <option key={icon.name} value={icon.name}>{icon.label}</option>)}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] text-slate-400">微信 ID/二维码描述</label>
+                        <input 
+                          className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm"
+                          value={siteConfig.social_wechat || ''}
+                          onChange={(e) => handleUpdateConfig('social_wechat', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] text-slate-400">微信图标</label>
+                        <select 
+                          className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-xs"
+                          value={siteConfig.social_wechat_icon || 'MessageSquare'}
+                          onChange={(e) => handleUpdateConfig('social_wechat_icon', e.target.value)}
+                        >
+                          {AVAILABLE_ICONS.map(icon => <option key={icon.name} value={icon.name}>{icon.label}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 border-t border-slate-50 pt-10">
+                    <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
+                      SEO 搜索引擎优化
+                    </label>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] text-slate-400">首页搜索描述 (Meta Description)</label>
+                        <textarea 
+                          className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm"
+                          rows={2}
+                          value={siteConfig.seo_description || '中澳落地赋能全景全周期服务。'}
+                          onChange={(e) => handleUpdateConfig('seo_description', e.target.value)}
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-6 border-t border-slate-50 pt-10">
@@ -706,6 +819,67 @@ export const AdminDashboard = () => {
                     onChange={(e) => handleUpdateConfig('hero_subtitle', e.target.value)}
                   />
                 </div>
+
+                <div className="space-y-6 border-t border-slate-50 pt-10">
+                  <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
+                    <BarChart3 className="text-blue-600 w-4 h-4" /> 核心数据面板 (Hero Stats & Badge)
+                  </label>
+                  
+                  <div className="grid md:grid-cols-2 gap-8 bg-slate-50 p-8 rounded-3xl">
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">顶部悬浮标签 (Badge Text)</label>
+                      <input className="w-full px-5 py-4 rounded-2xl bg-white border border-slate-200" value={siteConfig.hero_badge_text || '澳大利亚出海一站式服务中心'} onChange={(e) => handleUpdateConfig('hero_badge_text', e.target.value)} />
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div className="space-y-4 bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block text-center">数据 1</label>
+                      <input 
+                        className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-center font-bold text-blue-600" 
+                        placeholder="值 (如 15+ 年)"
+                        value={siteConfig.hero_stat_1_value || ''} 
+                        onChange={(e) => handleUpdateConfig('hero_stat_1_value', e.target.value)} 
+                      />
+                      <input 
+                        className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-center text-xs" 
+                        placeholder="描述 (如 中澳贸易深耕)"
+                        value={siteConfig.hero_stat_1_label || ''} 
+                        onChange={(e) => handleUpdateConfig('hero_stat_1_label', e.target.value)} 
+                      />
+                    </div>
+                    <div className="space-y-4 bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block text-center">数据 2</label>
+                      <input 
+                        className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-center font-bold text-blue-600" 
+                        placeholder="值 (如 500+)"
+                        value={siteConfig.hero_stat_2_value || ''} 
+                        onChange={(e) => handleUpdateConfig('hero_stat_2_value', e.target.value)} 
+                      />
+                      <input 
+                        className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-center text-xs" 
+                        placeholder="描述 (如 服务企业案例)"
+                        value={siteConfig.hero_stat_2_label || ''} 
+                        onChange={(e) => handleUpdateConfig('hero_stat_2_label', e.target.value)} 
+                      />
+                    </div>
+                    <div className="space-y-4 bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block text-center">数据 3</label>
+                      <input 
+                        className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-center font-bold text-blue-600" 
+                        placeholder="值 (如 60%)"
+                        value={siteConfig.hero_stat_3_value || ''} 
+                        onChange={(e) => handleUpdateConfig('hero_stat_3_value', e.target.value)} 
+                      />
+                      <input 
+                        className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-center text-xs" 
+                        placeholder="描述 (如 落地效率提升)"
+                        value={siteConfig.hero_stat_3_label || ''} 
+                        onChange={(e) => handleUpdateConfig('hero_stat_3_label', e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -716,29 +890,67 @@ export const AdminDashboard = () => {
                   <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
                     <ImageIcon className="text-blue-600 w-4 h-4" /> 关于我们 配图 (About Image)
                   </label>
-                  <div className="w-full max-w-md aspect-[4/3] bg-slate-100 rounded-3xl overflow-hidden mb-4 border-2 border-dashed border-slate-200">
-                    <img 
-                      src={siteConfig.about_image_url || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200'} 
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
+                  <div className="grid md:grid-cols-2 gap-8 items-start">
+                    <div className="w-full aspect-[4/3] bg-slate-100 rounded-3xl overflow-hidden border border-slate-200 relative">
+                      <img 
+                        src={siteConfig.about_image_url || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200'} 
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute bottom-4 right-4 bg-white p-4 rounded-2xl shadow-lg border border-slate-100 scale-75 origin-bottom-right">
+                        <div className="text-xl font-bold text-blue-600">{siteConfig.about_stat_value || '10+'}</div>
+                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{siteConfig.about_stat_label || '中澳跨国专家'}</div>
+                      </div>
+                    </div>
+                    <div className="space-y-6">
+                      <ImageUploadField 
+                        value={siteConfig.about_image_url}
+                        onChange={(val) => handleUpdateConfig('about_image_url', val)}
+                        placeholder="输入配图 URL 或上传文件"
+                      />
+                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+                        <div className="space-y-2">
+                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">浮层数据 (如 10+)</label>
+                           <input 
+                            className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-blue-600"
+                            value={siteConfig.about_stat_value || '10+'}
+                            onChange={(e) => handleUpdateConfig('about_stat_value', e.target.value)}
+                           />
+                        </div>
+                        <div className="space-y-2">
+                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">数据描述 (如 品牌专家)</label>
+                           <input 
+                            className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm"
+                            value={siteConfig.about_stat_label || '中澳跨国专家'}
+                            onChange={(e) => handleUpdateConfig('about_stat_label', e.target.value)}
+                           />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <ImageUploadField 
-                    value={siteConfig.about_image_url}
-                    onChange={(val) => handleUpdateConfig('about_image_url', val)}
-                    placeholder="输入配图 URL 或上传文件"
-                  />
                 </div>
 
-                <div className="space-y-4 border-t border-slate-50 pt-10">
-                  <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
-                    <Type className="text-blue-600 w-4 h-4" /> About Title (关于我们标题)
-                  </label>
-                  <input 
-                    className="w-full px-6 py-5 rounded-3xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none transition-all text-xl font-bold"
-                    value={siteConfig.about_title || '您的澳洲落地与增量 战略级合伙人'}
-                    onChange={(e) => handleUpdateConfig('about_title', e.target.value)}
-                  />
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
+                      <Type className="text-blue-600 w-4 h-4" /> About Badge (小标题)
+                    </label>
+                    <input 
+                      className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none transition-all text-sm font-bold text-blue-600"
+                      value={siteConfig.about_badge_text || '关于数贸融'}
+                      onChange={(e) => handleUpdateConfig('about_badge_text', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
+                      <Type className="text-blue-600 w-4 h-4" /> About Title (主标题)
+                    </label>
+                    <input 
+                      className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none transition-all text-sm font-bold"
+                      value={siteConfig.about_title || '您的澳洲落地与增量 战略级合伙人'}
+                      onChange={(e) => handleUpdateConfig('about_title', e.target.value)}
+                    />
+                  </div>
                 </div>
                 
                 <div className="space-y-4 border-t border-slate-50 pt-10">
@@ -753,18 +965,48 @@ export const AdminDashboard = () => {
                   />
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-8 border-t border-slate-50 pt-10">
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">亮点1 标题</label>
-                    <input className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200" value={siteConfig.about_p1_title || '● 深度本地化'} onChange={(e) => handleUpdateConfig('about_p1_title', e.target.value)} />
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">亮点1 描述</label>
-                    <input className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200" value={siteConfig.about_p1_desc || '不只是翻译，更是品牌灵魂的二次植入。'} onChange={(e) => handleUpdateConfig('about_p1_desc', e.target.value)} />
+                <div className="space-y-6 border-t border-slate-50 pt-10">
+                  <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl">
+                     <label className="text-sm font-bold">核心优势亮点</label>
+                     <button 
+                      onClick={addAboutFeature}
+                      className="text-blue-600 text-sm font-bold flex items-center gap-1"
+                     >
+                       <Plus size={16}/> 增加亮点
+                     </button>
                   </div>
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">亮点2 标题</label>
-                    <input className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200" value={siteConfig.about_p2_title || '● 全链路覆盖'} onChange={(e) => handleUpdateConfig('about_p2_title', e.target.value)} />
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">亮点2 描述</label>
-                    <input className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200" value={siteConfig.about_p2_desc || '从0到1的冷启动，到1到10的规模化增长。'} onChange={(e) => handleUpdateConfig('about_p2_desc', e.target.value)} />
+                  
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {currentAboutFeatures.map((feature: any, idx: number) => (
+                      <div key={idx} className="flex flex-col gap-3 bg-white border border-slate-100 p-6 rounded-3xl group shadow-sm relative">
+                        <button onClick={() => deleteAboutFeature(idx)} className="absolute top-4 right-4 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16}/></button>
+                        <div className="space-y-2">
+                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">亮点名称</label>
+                           <input 
+                            className="w-full text-blue-600 font-bold border-b border-slate-100 focus:border-blue-600 outline-none bg-transparent"
+                            value={feature.title}
+                            onChange={(e) => {
+                              const newList = [...currentAboutFeatures];
+                              newList[idx].title = e.target.value;
+                              updateAboutFeatures(newList);
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">亮点描述</label>
+                           <textarea 
+                            className="w-full text-xs text-slate-500 border-none outline-none focus:ring-0 bg-transparent resize-none"
+                            rows={2}
+                            value={feature.desc}
+                            onChange={(e) => {
+                              const newList = [...currentAboutFeatures];
+                              newList[idx].desc = e.target.value;
+                              updateAboutFeatures(newList);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -800,6 +1042,22 @@ export const AdminDashboard = () => {
                               updateServiceSteps(newList);
                             }}
                           />
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">步骤图标</label>
+                            <select 
+                              className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-xs outline-none"
+                              value={step.icon || 'Globe'}
+                              onChange={(e) => {
+                                const newList = [...currentServiceSteps];
+                                newList[idx].icon = e.target.value;
+                                updateServiceSteps(newList);
+                              }}
+                            >
+                              {AVAILABLE_ICONS.map(icon => (
+                                <option key={icon.name} value={icon.name}>{icon.label}</option>
+                              ))}
+                            </select>
+                          </div>
                         </div>
                         <div className="flex-grow">
                           <input 
@@ -829,6 +1087,19 @@ export const AdminDashboard = () => {
             {/* PAIN POINTS TAB */}
             {activeTab === 'pain-points' && (
               <div className="space-y-8">
+                <div className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 space-y-8">
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">板块小标题</label>
+                      <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200" value={siteConfig.pain_points_title || '核心痛点分析'} onChange={(e) => handleUpdateConfig('pain_points_title', e.target.value)} />
+                    </div>
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">板块主标题</label>
+                      <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200" value={siteConfig.pain_points_heading || '为什么出海澳洲总是“水土不服”？'} onChange={(e) => handleUpdateConfig('pain_points_heading', e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex justify-between items-center bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
                    <h3 className="font-bold">痛点卡片设置</h3>
                    <button onClick={addPainPoint} className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold text-sm"><Plus size={18}/> 增加痛点</button>
@@ -860,17 +1131,16 @@ export const AdminDashboard = () => {
                         <div className="flex items-center gap-2">
                           <select 
                             className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs outline-none"
-                            value={point.icon}
+                            value={point.icon || 'Search'}
                             onChange={(e) => {
                               const newList = [...currentPainPoints];
                               newList[idx].icon = e.target.value;
                               updatePainPoints(newList);
                             }}
                           >
-                            <option value="Search">Search (搜索)</option>
-                            <option value="MapPin">MapPin (定位)</option>
-                            <option value="TrendingUp">TrendingUp (增长)</option>
-                            <option value="Briefcase">Briefcase (业务)</option>
+                            {AVAILABLE_ICONS.map(icon => (
+                              <option key={icon.name} value={icon.name}>{icon.label}</option>
+                            ))}
                           </select>
                         </div>
                       </div>
@@ -901,6 +1171,23 @@ export const AdminDashboard = () => {
             {/* PRODUCTS TAB */}
             {activeTab === 'products' && (
               <div className="space-y-10">
+                <div className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 space-y-8">
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">服务板块小标题 (Badge)</label>
+                      <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200" value={siteConfig.services_badge_text || 'Service Architecture'} onChange={(e) => handleUpdateConfig('services_badge_text', e.target.value)} />
+                    </div>
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">服务板块主标题</label>
+                      <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200" value={siteConfig.services_title || '“三阶六维”出海赋能全案'} onChange={(e) => handleUpdateConfig('services_title', e.target.value)} />
+                    </div>
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">服务板块描述语</label>
+                      <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200" value={siteConfig.services_description || ''} onChange={(e) => handleUpdateConfig('services_description', e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex justify-between items-center bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
                   <div>
                     <h3 className="font-bold text-lg">产品矩阵模块管理</h3>
@@ -957,8 +1244,25 @@ export const AdminDashboard = () => {
                             );
                           })()}
                         </div>
+                        <div className="space-y-4">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">图标 (与封面图共享字段, 若非 URL 则作为图标显示)</label>
+                          <select 
+                            className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-xs outline-none"
+                            value={AVAILABLE_ICONS.some(i => i.name === product.image_url) ? product.image_url : 'Custom'}
+                            onChange={(e) => {
+                              if (e.target.value !== 'Custom') {
+                                handleUpdateProduct(product.id, 'image_url', e.target.value);
+                              }
+                            }}
+                          >
+                            <option value="Custom">使用自定义图片 URL</option>
+                            {AVAILABLE_ICONS.map(icon => (
+                              <option key={icon.name} value={icon.name}>{icon.label}</option>
+                            ))}
+                          </select>
+                        </div>
                         <ImageUploadField 
-                          label="产品封面"
+                          label="产品封面 (URL 或上传)"
                           value={product.image_url}
                           onChange={(val) => handleUpdateProduct(product.id, 'image_url', val)}
                           placeholder="图片 URL 或上传"
@@ -1077,26 +1381,89 @@ export const AdminDashboard = () => {
             {/* CONTACT TAB */}
             {activeTab === 'contact' && (
               <div className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 max-w-4xl mx-auto space-y-10 font-sans">
-                <div className="grid md:grid-cols-2 gap-8">
+                <div className="grid md:grid-cols-3 gap-8">
                   <div className="space-y-4">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">联系板块小标题 (Title)</label>
-                    <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none text-lg font-bold text-blue-600" value={siteConfig.contact_title || ''} onChange={(e) => handleUpdateConfig('contact_title', e.target.value)} />
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">联系板块小标题 (Badge)</label>
+                    <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none text-lg font-bold text-blue-600" value={siteConfig.contact_badge_text || '联系我们'} onChange={(e) => handleUpdateConfig('contact_badge_text', e.target.value)} />
                   </div>
                   <div className="space-y-4">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">联系板块大标题 (Heading)</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">联系板块主标题</label>
+                    <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none text-lg font-bold" value={siteConfig.contact_title || ''} onChange={(e) => handleUpdateConfig('contact_title', e.target.value)} />
+                  </div>
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">联系板块副标题 (Heading)</label>
                     <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none text-lg font-bold" value={siteConfig.contact_heading || ''} onChange={(e) => handleUpdateConfig('contact_heading', e.target.value)} />
                   </div>
                 </div>
-                <div className="grid md:grid-cols-2 gap-8 border-t border-slate-50 pt-10">
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">服务邮箱</label>
-                    <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none text-lg" value={siteConfig.contact_email || ''} onChange={(e) => handleUpdateConfig('contact_email', e.target.value)} />
-                  </div>
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">咨询电话</label>
-                    <input className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none text-lg" value={siteConfig.contact_phone || ''} onChange={(e) => handleUpdateConfig('contact_phone', e.target.value)} />
-                  </div>
+                <div className="space-y-6 border-t border-slate-50 pt-10">
+                   <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl">
+                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-balance">联系方式项 (电子邮箱、电话、地址等)</label>
+                     <button 
+                      onClick={() => updateContactItems([...currentContactItems, { icon: 'Mail', label: '新项', value: 'example@email.com' }])}
+                      className="text-blue-600 text-xs font-bold flex items-center gap-1"
+                     >
+                       <Plus size={14}/> 添加联系项
+                     </button>
+                   </div>
+                   
+                   <div className="space-y-4">
+                     {currentContactItems.map((item: any, idx: number) => (
+                       <div key={idx} className="flex flex-col md:flex-row gap-4 bg-white border border-slate-100 p-6 rounded-3xl group shadow-sm relative">
+                          <button 
+                            onClick={() => updateContactItems(currentContactItems.filter((_: any, i: number) => i !== idx))}
+                            className="absolute top-4 right-4 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 size={16}/>
+                          </button>
+                          
+                          <div className="md:w-32 space-y-2">
+                             <label className="text-[10px] font-bold text-slate-300 uppercase">图标</label>
+                             <select 
+                              className="w-full p-2 bg-slate-50 rounded-lg text-[10px] outline-none"
+                              value={item.icon || 'Mail'}
+                              onChange={(e) => {
+                                const newList = [...currentContactItems];
+                                newList[idx].icon = e.target.value;
+                                updateContactItems(newList);
+                              }}
+                             >
+                               {AVAILABLE_ICONS.map(icon => (
+                                 <option key={icon.name} value={icon.name}>{icon.label}</option>
+                               ))}
+                             </select>
+                          </div>
+                          
+                          <div className="flex-grow grid md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                               <label className="text-[10px] font-bold text-slate-300 uppercase">标签 (Label)</label>
+                               <input 
+                                className="w-full p-2 bg-slate-50 rounded-lg text-xs font-bold" 
+                                value={item.label} 
+                                onChange={(e) => {
+                                  const newList = [...currentContactItems];
+                                  newList[idx].label = e.target.value;
+                                  updateContactItems(newList);
+                                }} 
+                               />
+                            </div>
+                            <div className="space-y-2">
+                               <label className="text-[10px] font-bold text-slate-300 uppercase">数值 (Value)</label>
+                               <input 
+                                className="w-full p-2 bg-slate-50 rounded-lg text-xs" 
+                                value={item.value} 
+                                onChange={(e) => {
+                                  const newList = [...currentContactItems];
+                                  newList[idx].value = e.target.value;
+                                  updateContactItems(newList);
+                                }} 
+                               />
+                            </div>
+                          </div>
+                       </div>
+                     ))}
+                   </div>
                 </div>
+
                 <div className="space-y-4 border-t border-slate-50 pt-10">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">表单上方引导语 (支持二级内容)</label>
                   <textarea className="w-full px-6 py-5 rounded-3xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none text-gray-600 leading-relaxed" rows={3} value={siteConfig.contact_form_text || ''} onChange={(e) => handleUpdateConfig('contact_form_text', e.target.value)} />

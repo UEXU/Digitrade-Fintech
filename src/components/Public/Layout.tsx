@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowRight, Mail, Phone, MapPin, Globe, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { getLucideIcon } from '../../lib/icons';
 
 export const Industries = ({ data, title, heading }: { data?: any[]; title?: string; heading?: string }) => {
   const defaultIndustries = [
@@ -72,22 +73,29 @@ export const Industries = ({ data, title, heading }: { data?: any[]; title?: str
 };
 
 export const About = ({ 
+  badge = "关于数贸融",
   title, 
   content,
   imageUrl,
-  p1Title,
-  p1Desc,
-  p2Title,
-  p2Desc
+  features,
+  statValue = "10+",
+  statLabel = "中澳跨国专家"
 }: { 
+  badge?: string;
   title?: string; 
   content?: string;
   imageUrl?: string;
-  p1Title?: string;
-  p1Desc?: string;
-  p2Title?: string;
-  p2Desc?: string;
+  features?: { title: string; desc: string }[];
+  statValue?: string;
+  statLabel?: string;
 }) => {
+  const defaultFeatures = [
+    { title: '● 深度本地化', desc: '不只是翻译，更是品牌灵魂的二次植入。' },
+    { title: '● 全链路覆盖', desc: '从0到1的冷启动，到1到10的规模化增长。' }
+  ];
+
+  const displayFeatures = features && features.length > 0 ? features : defaultFeatures;
+
   return (
     <section id="about" className="py-24 bg-slate-50 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -123,13 +131,13 @@ export const About = ({
               <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-transparent"></div>
             </div>
             <div className="absolute -bottom-6 -right-6 bg-white p-8 rounded-3xl shadow-xl border border-slate-100 hidden md:block">
-              <div className="text-3xl font-bold text-blue-600 mb-1">10+</div>
-              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest">中澳跨国专家</div>
+              <div className="text-3xl font-bold text-blue-600 mb-1">{statValue}</div>
+              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest">{statLabel}</div>
             </div>
           </div>
           
           <div>
-            <h2 className="text-blue-600 font-bold tracking-widest uppercase text-sm mb-3">关于数贸融</h2>
+            <h2 className="text-blue-600 font-bold tracking-widest uppercase text-sm mb-3">{badge}</h2>
             <p className="text-3xl md:text-4xl font-bold text-gray-900 mb-8 leading-tight text-balance">
               {title || '您的澳洲落地与增量\n战略级合伙人'}
             </p>
@@ -144,23 +152,17 @@ export const About = ({
               )}
             </div>
             
-            <div className="grid grid-cols-2 gap-8">
-              <div>
-                <div className="text-blue-600 font-bold mb-2">
-                  {p1Title || '● 深度本地化'}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              {displayFeatures.map((f, i) => (
+                <div key={i}>
+                  <div className="text-blue-600 font-bold mb-2">
+                    {f.title}
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    {f.desc}
+                  </p>
                 </div>
-                <p className="text-sm text-gray-500">
-                  {p1Desc || '不只是翻译，更是品牌灵魂的二次植入。'}
-                </p>
-              </div>
-              <div>
-                <div className="text-blue-600 font-bold mb-2">
-                  {p2Title || '● 全链路覆盖'}
-                </div>
-                <p className="text-sm text-gray-500">
-                  {p2Desc || '从0到1的冷启动，到1到10的规模化增长。'}
-                </p>
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -170,19 +172,19 @@ export const About = ({
 };
 
 export const Contact = ({ 
+  badge = "联系我们",
   title, 
   heading, 
-  email, 
-  phone, 
   formText, 
-  formFields 
+  formFields,
+  contactItems
 }: { 
+  badge?: string;
   title?: string; 
   heading?: string; 
-  email?: string; 
-  phone?: string; 
   formText?: string; 
-  formFields?: any[] 
+  formFields?: any[];
+  contactItems?: any[];
 }) => {
   const [formData, setFormData] = useState<any>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -244,36 +246,40 @@ export const Contact = ({
 
   const fields = formFields && formFields.length > 0 ? formFields : defaultFields;
 
+  const defaultContactItems = [
+    { icon: 'Mail', label: '电子邮箱', value: 'info@digitradefintech.com' },
+    { icon: 'Phone', label: '联系电话', value: '+61 (07) 1234 5678 / +86 123 4567 8910' }
+  ];
+
+  const items = contactItems && contactItems.length > 0 ? contactItems : defaultContactItems;
+
   return (
     <section id="contact" className="py-24 bg-white overflow-hidden relative border-t border-slate-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div>
             <h2 className="text-blue-600 font-bold tracking-widest uppercase text-sm mb-3">
-              {title || '联系我们'}
+              {badge}
             </h2>
             <p className="text-4xl font-bold text-gray-900 mb-8 leading-tight whitespace-pre-line">
-              {heading || '开启您的\n澳洲出海之旅'}
+              {title || heading || '开启您的\n澳洲出海之旅'}
             </p>
             <p className="text-gray-600 text-lg mb-12">
               {formText || '填写右侧表单，我们的中澳专家团队将为您提供免费的初步咨询和合规风险评估。'}
             </p>
 
             <div className="space-y-8">
-              <div className="flex items-start gap-6">
-                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center flex-shrink-0"><Mail className="w-6 h-6" /></div>
-                <div>
-                  <h4 className="font-bold text-gray-900 mb-1">电子邮箱</h4>
-                  <p className="text-gray-600">{email || 'info@digitradefintech.com'}</p>
+              {items.map((item, idx) => (
+                <div key={idx} className="flex items-start gap-6">
+                  <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    {getLucideIcon(item.icon || 'Mail', 'w-6 h-6')}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 mb-1">{item.label}</h4>
+                    <p className="text-gray-600">{item.value}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-6">
-                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center flex-shrink-0"><Phone className="w-6 h-6" /></div>
-                <div>
-                  <h4 className="font-bold text-gray-900 mb-1">联系电话</h4>
-                  <p className="text-gray-600">{phone || '+61 (07) 1234 5678 / +86 123 4567 8910'}</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -321,12 +327,20 @@ export const Footer = ({
   logoText, 
   logoSubtitle, 
   logoUrl,
-  description
+  description,
+  linkedin,
+  wechat,
+  linkedinIcon,
+  wechatIcon
 }: { 
   logoText?: string; 
   logoSubtitle?: string; 
   logoUrl?: string;
   description?: string;
+  linkedin?: string;
+  wechat?: string;
+  linkedinIcon?: string;
+  wechatIcon?: string;
 }) => (
   <footer className="bg-slate-900 text-white py-20">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -354,9 +368,26 @@ export const Footer = ({
               </span>
             </div>
           </div>
-          <p className="text-gray-400 leading-relaxed">
+          <p className="text-gray-400 leading-relaxed mb-6">
             {description || '专注于跨境贸易本土化全链路赋能的智能服务中心。我们不仅是服务提供者，更是客户的海外增长合伙人。'}
           </p>
+          <div className="flex gap-4">
+            {linkedin && (
+              <a href={linkedin} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-blue-600 transition-all">
+                {getLucideIcon(linkedinIcon || 'Linkedin', 'w-5 h-5')}
+              </a>
+            )}
+            {wechat && (
+              <div className="group relative">
+                <button className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-green-600 transition-all">
+                  {getLucideIcon(wechatIcon || 'MessageSquare', 'w-5 h-5')}
+                </button>
+                <div className="absolute bottom-full mb-2 left-0 w-42 bg-white text-slate-900 text-[10px] p-2 rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none text-center">
+                  微信号: {wechat}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         <div>
           <h4 className="font-bold text-lg mb-8 text-white">快速入口</h4>
