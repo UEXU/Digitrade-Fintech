@@ -65,7 +65,7 @@ const DEFAULT_CONFIG = {
 };
 
 export const HomePage = () => {
-  const [siteConfig, setSiteConfig] = useState<any>(DEFAULT_CONFIG);
+  const [siteConfig, setSiteConfig] = useState<any>({});
   const [products, setProducts] = useState<any[]>(DEFAULT_PRODUCTS);
   const [loading, setLoading] = useState(true);
   const [isConfigured, setIsConfigured] = useState(true);
@@ -83,16 +83,6 @@ export const HomePage = () => {
   const steps = safeJsonParse(siteConfig.service_steps, fallbackSteps);
 
   useEffect(() => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-    // Check if configuration is missing or still at placeholder/default state
-    if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('your-project') || supabaseUrl === 'https://placeholder.supabase.co') {
-      setIsConfigured(false);
-      setLoading(false);
-      return;
-    }
-
     const fetchData = async () => {
       try {
         const { data: configData, error: configError } = await supabase.from('site_config').select('*');
@@ -117,7 +107,7 @@ export const HomePage = () => {
             acc[item.key] = item.value;
             return acc;
           }, {});
-          setSiteConfig(configObj);
+          setSiteConfig({ ...DEFAULT_CONFIG, ...configObj });
         }
 
         if (productsData && productsData.length > 0) {
@@ -132,8 +122,19 @@ export const HomePage = () => {
         }
       } catch (error) {
         console.error('Error fetching site data:', error);
+        setSiteConfig(DEFAULT_CONFIG);
       } finally {
         setLoading(false);
+        // After loading is done, check for hash and scroll
+        if (window.location.hash) {
+          setTimeout(() => {
+            const id = window.location.hash.replace('#', '');
+            const element = document.getElementById(id);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth' });
+            }
+          }, 300);
+        }
       }
     };
 
@@ -154,6 +155,17 @@ export const HomePage = () => {
       }
     }
   }, [siteConfig.seo_description]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white space-y-6">
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="text-blue-400 font-bold tracking-[0.3em] uppercase text-xs animate-pulse">
+          Digitrade Fintech Loading...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
@@ -182,11 +194,6 @@ export const HomePage = () => {
           title={siteConfig.pain_points_title}
           heading={siteConfig.pain_points_heading}
         />
-        <ServicePath 
-          title={siteConfig.service_path_title} 
-          heading={siteConfig.service_path_heading} 
-          steps={steps} 
-        />
         <Services 
           products={products} 
           title={siteConfig.services_badge_text}
@@ -197,6 +204,11 @@ export const HomePage = () => {
           data={safeJsonParse(siteConfig.industries)} 
           title={siteConfig.industries_title}
           heading={siteConfig.industries_heading}
+        />
+        <ServicePath 
+          title={siteConfig.service_path_title} 
+          heading={siteConfig.service_path_heading} 
+          steps={steps} 
         />
         <About 
           badge={siteConfig.about_badge_text}
@@ -226,6 +238,9 @@ export const HomePage = () => {
         wechat={siteConfig.social_wechat}
         linkedinIcon={siteConfig.social_linkedin_icon}
         wechatIcon={siteConfig.social_wechat_icon}
+        copyrightText={siteConfig.footer_copyright}
+        privacyText={siteConfig.footer_privacy_text}
+        termsText={siteConfig.footer_terms_text}
       />
     </div>
   );

@@ -11,10 +11,30 @@ import { AdminDashboard } from './pages/Admin/AdminDashboard';
 import { IndustryDetail } from './pages/IndustryDetail';
 import { ProductMatrix } from './pages/ProductMatrix';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { useLocation } from 'react-router-dom';
+
+const ScrollToHash = () => {
+  const { hash } = useLocation();
+
+  React.useEffect(() => {
+    if (hash) {
+      const id = hash.replace('#', '');
+      const element = document.getElementById(id);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [hash]);
+
+  return null;
+};
 
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToHash />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />

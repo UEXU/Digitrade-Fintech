@@ -18,7 +18,8 @@ import {
   Activity,
   Info,
   FileText,
-  BarChart3
+  BarChart3,
+  Layout
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { safeJsonParse } from '../../lib/utils';
@@ -114,7 +115,7 @@ export const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [connStatus, setConnStatus] = useState<'connected' | 'error' | 'unknown'>('unknown');
-  const [activeTab, setActiveTab] = useState<'navbar' | 'hero' | 'about' | 'service-path' | 'products' | 'industries' | 'contact' | 'pain-points' | 'leads'>('navbar');
+  const [activeTab, setActiveTab] = useState<'navbar' | 'hero' | 'about' | 'service-path' | 'products' | 'industries' | 'contact' | 'pain-points' | 'footer' | 'leads'>('navbar');
   const navigate = useNavigate();
 
   const AVAILABLE_ICONS = [
@@ -398,7 +399,7 @@ export const AdminDashboard = () => {
   const currentNavLinks = getConfig('navbar_links', [
     { name: '服务体系', href: '/#services' },
     { name: '行业方案', href: '/#industries' },
-    { name: '服务路径', href: '/#how-it-works' },
+    { name: '服务流程', href: '/#how-it-works' },
     { name: '关于我们', href: '/#about' },
   ]);
   const currentFormFields = getConfig('contact_form_fields', [
@@ -534,6 +535,10 @@ export const AdminDashboard = () => {
             <div className="flex items-center gap-3"><FileText size={18}/> 咨询线索</div>
             <ChevronRight size={14} className={activeTab === 'leads' ? 'opacity-100' : 'opacity-0'} />
           </button>
+          <button onClick={() => setActiveTab('footer')} className={`w-full flex items-center justify-between px-5 py-4 rounded-xl transition-all ${activeTab === 'footer' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/5'}`}>
+            <div className="flex items-center gap-3"><Layout size={18}/> 页脚设置</div>
+            <ChevronRight size={14} className={activeTab === 'footer' ? 'opacity-100' : 'opacity-0'} />
+          </button>
         </nav>
 
         <div className="pt-6 border-t border-white/10">
@@ -559,6 +564,7 @@ export const AdminDashboard = () => {
                   {activeTab === 'industries' && '行业解决方案管理'}
                   {activeTab === 'contact' && '表单与联系方式设置'}
                   {activeTab === 'leads' && '网站咨询线索 (Leads)'}
+                  {activeTab === 'footer' && '页脚内容管理'}
                 </h1>
                 {connStatus === 'error' && (
                   <span className="bg-red-100 text-red-600 text-[10px] px-2 py-1 rounded font-black animate-pulse cursor-help" title={lastError || 'Unknown connection error'}>
@@ -648,7 +654,7 @@ export const AdminDashboard = () => {
                   
                   <div className="space-y-4 border-t border-slate-50 pt-10">
                     <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
-                      页脚公司简介文字
+                      页脚公司简介文字 (支持换行)
                     </label>
                     <textarea 
                       className="w-full px-6 py-5 rounded-3xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none transition-all text-sm leading-relaxed"
@@ -787,7 +793,7 @@ export const AdminDashboard = () => {
 
                 <div className="space-y-4 border-t border-slate-50 pt-10">
                   <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
-                    <Type className="text-blue-600 w-4 h-4" /> Hero Title (主标题)
+                    <Type className="text-blue-600 w-4 h-4" /> Hero Title (主标题 - 支持换行)
                   </label>
                   <textarea 
                     className="w-full px-6 py-5 rounded-3xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none transition-all text-2xl font-bold leading-relaxed"
@@ -810,7 +816,7 @@ export const AdminDashboard = () => {
 
                 <div className="space-y-4 border-t border-slate-50 pt-10">
                   <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
-                    <Type className="text-blue-600 w-4 h-4" /> Hero Subtitle (副标题)
+                    <Type className="text-blue-600 w-4 h-4" /> Hero Subtitle (副标题 - 支持换行)
                   </label>
                   <textarea 
                     className="w-full px-6 py-5 rounded-3xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none transition-all text-gray-600 leading-loose"
@@ -955,7 +961,7 @@ export const AdminDashboard = () => {
                 
                 <div className="space-y-4 border-t border-slate-50 pt-10">
                   <label className="text-sm font-bold text-gray-700 flex items-center gap-2 italic uppercase tracking-widest text-[10px]">
-                    <Type className="text-blue-600 w-4 h-4" /> About Content (详细内容介绍)
+                    <Type className="text-blue-600 w-4 h-4" /> About Content (详细内容介绍 - 支持换行)
                   </label>
                   <textarea 
                     className="w-full px-6 py-5 rounded-3xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none transition-all text-gray-600 leading-relaxed"
@@ -1146,7 +1152,7 @@ export const AdminDashboard = () => {
                       </div>
                       <div className="space-y-4">
                         <div className="space-y-2">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">痛点简述 (首页展示)</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">痛点简述 (首页展示 - 支持换行)</label>
                           <textarea className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 text-sm" rows={2} value={point.desc} onChange={(e) => {
                             const newList = [...currentPainPoints];
                             newList[idx].desc = e.target.value;
@@ -1154,7 +1160,7 @@ export const AdminDashboard = () => {
                           }} />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">互动详情 (点击展开显示)</label>
+                          <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">互动详情 (点击展开显示 - 支持换行)</label>
                           <textarea className="w-full px-4 py-3 rounded-xl bg-blue-50/20 border border-blue-50 text-sm italic" rows={4} value={point.more} onChange={(e) => {
                             const newList = [...currentPainPoints];
                             newList[idx].more = e.target.value;
@@ -1288,7 +1294,7 @@ export const AdminDashboard = () => {
                            <input className="w-full px-4 py-3 rounded-xl border border-slate-200 font-mono text-xs text-blue-600" value={product.features} onChange={(e) => handleUpdateProduct(product.id, 'features', e.target.value)} />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase">产品矩阵深度解析 (详细介绍)</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">产品矩阵深度解析 (详细介绍 - 支持换行)</label>
                           <textarea className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm h-[140px] leading-relaxed" value={product.description} onChange={(e) => handleUpdateProduct(product.id, 'description', e.target.value)} />
                         </div>
                       </div>
@@ -1370,6 +1376,20 @@ export const AdminDashboard = () => {
                             newList[idx].description = e.target.value;
                             updateIndustries(newList);
                           }} />
+                        </div>
+                        <div className="space-y-4">
+                          <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">详情页二级页面内容 (支持详细方案管理 - 支持换行)</label>
+                          <textarea 
+                            className="w-full px-6 py-5 rounded-3xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none text-sm leading-relaxed" 
+                            rows={6}
+                            placeholder="在此输入该行业的详尽解决方案、成功案例或市场机遇分析..."
+                            value={item.fullContent || ''} 
+                            onChange={(e) => {
+                              const newList = [...currentIndustries];
+                              newList[idx].fullContent = e.target.value;
+                              updateIndustries(newList);
+                            }} 
+                          />
                         </div>
                       </div>
                     </div>
@@ -1465,7 +1485,7 @@ export const AdminDashboard = () => {
                 </div>
 
                 <div className="space-y-4 border-t border-slate-50 pt-10">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">表单上方引导语 (支持二级内容)</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">表单上方引导语 (支持换行)</label>
                   <textarea className="w-full px-6 py-5 rounded-3xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none text-gray-600 leading-relaxed" rows={3} value={siteConfig.contact_form_text || ''} onChange={(e) => handleUpdateConfig('contact_form_text', e.target.value)} />
                 </div>
                 <div className="space-y-6 border-t border-slate-50 pt-10">
@@ -1641,6 +1661,49 @@ CREATE POLICY "Allow authenticated read" ON public.leads FOR SELECT TO authentic
                     })}
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'footer' && (
+              <div className="space-y-8">
+                <div className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 space-y-10">
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">版权信息 (Copyright)</label>
+                    <input 
+                      className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none" 
+                      placeholder={`© ${new Date().getFullYear()} 数贸融出海服务中心. All rights reserved.`}
+                      value={siteConfig.footer_copyright || ''} 
+                      onChange={(e) => handleUpdateConfig('footer_copyright', e.target.value)} 
+                    />
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">隐私政策链接文字</label>
+                      <input 
+                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none" 
+                        placeholder="隐私政策"
+                        value={siteConfig.footer_privacy_text || ''} 
+                        onChange={(e) => handleUpdateConfig('footer_privacy_text', e.target.value)} 
+                      />
+                    </div>
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">服务条款链接文字</label>
+                      <input 
+                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 outline-none" 
+                        placeholder="服务条款"
+                        value={siteConfig.footer_terms_text || ''} 
+                        onChange={(e) => handleUpdateConfig('footer_terms_text', e.target.value)} 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-6 bg-blue-50/50 rounded-3xl border border-blue-100">
+                    <p className="text-xs text-blue-600 leading-relaxed font-medium">
+                      提示：此处仅支持修改底部文字内容。如有法律合规变动，请同步更新隐私政策和服务条款的对应内容。
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>

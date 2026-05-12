@@ -44,7 +44,16 @@ export const ProductMatrix = () => {
     return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center italic text-slate-400 font-medium">正在同步产品矩阵数据...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white space-y-6">
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="text-blue-400 font-bold tracking-[0.3em] uppercase text-xs animate-pulse">
+           产品矩阵加载中...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -118,7 +127,7 @@ export const ProductMatrix = () => {
                 </div>
 
                 <div className="p-8 md:p-10 flex flex-col flex-grow space-y-6">
-                  <p className="text-gray-600 leading-relaxed text-sm">
+                  <p className="text-gray-600 leading-relaxed text-sm whitespace-pre-line">
                     {product.description}
                   </p>
 
@@ -154,6 +163,14 @@ export const ProductMatrix = () => {
         logoText={siteConfig.company_logo_text} 
         logoSubtitle={siteConfig.company_logo_subtitle}
         logoUrl={siteConfig.logo_url} 
+        description={siteConfig.footer_description}
+        linkedin={siteConfig.social_linkedin}
+        wechat={siteConfig.social_wechat}
+        linkedinIcon={siteConfig.social_linkedin_icon}
+        wechatIcon={siteConfig.social_wechat_icon}
+        copyrightText={siteConfig.footer_copyright}
+        privacyText={siteConfig.footer_privacy_text}
+        termsText={siteConfig.footer_terms_text}
       />
     </div>
   );

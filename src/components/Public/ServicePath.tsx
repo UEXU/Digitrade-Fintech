@@ -27,7 +27,7 @@ export const ServicePath = ({ title, heading, steps }: ServicePathProps) => {
   const list = steps && steps.length > 0 ? steps : defaultSteps;
 
   return (
-    <section className="py-24 bg-white overflow-hidden">
+    <section id="how-it-works" className="py-24 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-20">
           <h2 className="text-blue-600 font-bold tracking-widest uppercase text-sm mb-3">
@@ -39,10 +39,10 @@ export const ServicePath = ({ title, heading, steps }: ServicePathProps) => {
         </div>
 
         <div className="relative">
-          {/* Main Connector Path Line */}
-          <div className="absolute top-[48px] left-8 right-8 h-0.5 bg-slate-100 hidden lg:block z-0">
+          {/* Main Connector Path Line - Desktop Only */}
+          <div className="absolute top-[40px] left-[7%] right-[7%] h-0.5 bg-slate-100 hidden lg:block z-0">
             <motion.div 
-              className="h-full bg-blue-600/20 origin-left"
+              className="h-full bg-blue-600 origin-left"
               initial={{ scaleX: 0 }}
               whileInView={{ scaleX: 1 }}
               viewport={{ once: true }}
@@ -50,54 +50,31 @@ export const ServicePath = ({ title, heading, steps }: ServicePathProps) => {
             />
           </div>
 
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${Math.min(list.length, 7)} gap-y-16 gap-x-4 relative z-10`}>
-            {list.map((step, idx) => {
-              const isEven = idx % 2 === 0;
-              return (
-                <motion.div 
-                  key={idx}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1, duration: 0.5 }}
-                  className={`flex flex-col items-center text-center group ${idx > 0 && 'lg:pl-0'}`}
-                >
-                  {/* Step Node */}
-                  <div className="relative mb-8">
-                    {/* Pulsing indicator for active feel */}
-                    <div className="absolute inset-0 bg-blue-600 rounded-full scale-125 opacity-20 blur-xl group-hover:opacity-40 transition-opacity"></div>
-                    
-                    <div className="w-24 h-24 bg-white border-4 border-slate-50 rounded-[2.5rem] flex items-center justify-center text-blue-600 shadow-xl shadow-slate-200/50 transition-all duration-500 group-hover:border-blue-600 group-hover:scale-110 relative z-10 overflow-visible">
-                      {/* Step Number Badge */}
-                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-10 bg-blue-600 text-white rounded-2xl flex items-center justify-center text-[11px] font-black shadow-lg border-4 border-white">
-                        {idx + 1}
-                      </div>
-
-                      <div className="text-blue-600 transition-transform duration-500 group-hover:rotate-6">
-                        {getLucideIcon(step.icon, "w-10 h-10 stroke-[1.5]")}
-                      </div>
-                    </div>
-                    
-                    {/* Connecting Arrows for Desktop (except last) */}
-                    {idx < list.length - 1 && (
-                      <div className="hidden lg:flex absolute top-12 -right-4 translate-x-full h-full items-start text-slate-100 group-hover:text-blue-200 transition-colors">
-                        <div className="w-8 h-px bg-current mt-2"></div>
-                      </div>
-                    )}
+          {/* Grid Container - Strictly 7 columns on large screens to force horizontal row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-y-12 lg:gap-x-1 relative z-10">
+            {list.map((step, idx) => (
+              <motion.div 
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                className="flex flex-col items-center text-center group"
+              >
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border-2 border-slate-100 rounded-[1.5rem] sm:rounded-3xl flex items-center justify-center text-blue-600 mb-4 sm:mb-6 transition-all duration-500 group-hover:border-blue-600 group-hover:shadow-xl group-hover:shadow-blue-600/10 relative z-10 shrink-0">
+                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-6 h-6 sm:w-8 sm:h-8 bg-blue-600 text-white rounded-lg sm:rounded-xl flex items-center justify-center text-[8px] sm:text-[10px] font-black shadow-lg border-2 border-white">
+                    {idx + 1}
                   </div>
-
-                  {/* Text Content */}
-                  <div className={`px-4 transition-transform duration-500 ${isEven ? 'lg:translate-y-4' : 'lg:-translate-y-2'}`}>
-                    <h4 className="text-base font-black text-gray-900 mb-1 tracking-tight group-hover:text-blue-600 transition-colors">
-                      {step.title}
-                    </h4>
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight">
-                      {step.desc}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
+                  {getLucideIcon(step.icon, "w-6 h-6 sm:w-8 sm:h-8 stroke-[1.5]")}
+                </div>
+                <div className="px-1">
+                  <h4 className="text-[11px] sm:text-xs lg:text-[13px] font-black text-gray-900 mb-1 tracking-tight">{step.title}</h4>
+                  <p className="text-[7px] sm:text-[8px] font-black text-slate-400 uppercase tracking-[0.1em] leading-tight opacity-70 group-hover:opacity-100 transition-opacity">
+                    {step.desc}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>

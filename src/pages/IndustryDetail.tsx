@@ -44,7 +44,16 @@ export const IndustryDetail = () => {
     return () => window.removeEventListener('focus', handleFocus);
   }, [id]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center italic text-slate-400">正在开启方案详情...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white space-y-6">
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="text-blue-400 font-bold tracking-[0.3em] uppercase text-xs animate-pulse">
+           方案详情加载中...
+        </div>
+      </div>
+    );
+  }
   if (!industry) return <div className="min-h-screen flex flex-col items-center justify-center">
     <h2 className="text-2xl font-bold mb-4">未找到该行业方案</h2>
     <Link to="/" className="text-blue-600 font-bold flex items-center gap-2 hover:underline">
@@ -104,7 +113,7 @@ export const IndustryDetail = () => {
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight leading-tight">
               {industry.name}
             </h1>
-            <p className="text-xl text-slate-300 leading-relaxed font-light">
+            <p className="text-xl text-slate-300 leading-relaxed font-light whitespace-pre-line">
               {industry.description}
             </p>
           </motion.div>
@@ -184,6 +193,14 @@ export const IndustryDetail = () => {
         logoText={siteConfig.company_logo_text} 
         logoSubtitle={siteConfig.company_logo_subtitle}
         logoUrl={siteConfig.logo_url} 
+        description={siteConfig.footer_description}
+        linkedin={siteConfig.social_linkedin}
+        wechat={siteConfig.social_wechat}
+        linkedinIcon={siteConfig.social_linkedin_icon}
+        wechatIcon={siteConfig.social_wechat_icon}
+        copyrightText={siteConfig.footer_copyright}
+        privacyText={siteConfig.footer_privacy_text}
+        termsText={siteConfig.footer_terms_text}
       />
     </div>
   );

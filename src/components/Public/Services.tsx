@@ -51,7 +51,7 @@ export const Services = ({ products, title, heading, description }: ServicesProp
           <h2 className="text-blue-600 font-bold tracking-[0.3em] uppercase text-sm mb-4">{title || 'Service Architecture'}</h2>
           <p className="text-4xl md:text-5xl font-black text-gray-900 mb-8 tracking-tight">{heading || '“三阶六维”出海赋能全案'}</p>
           <div className="w-24 h-1.5 bg-blue-600 rounded-full mb-8"></div>
-          <p className="text-gray-500 text-lg max-w-3xl leading-relaxed font-medium">
+          <p className="text-gray-500 text-lg max-w-3xl leading-relaxed font-medium whitespace-pre-line">
             {description || '针对赴澳企业不同阶段的痛点，精炼出三阶梯交付标准。从刚进入的决策对接到业务成熟后的资源整合，提供确定性的顾问式支持。'}
           </p>
         </div>
@@ -106,7 +106,6 @@ export const Services = ({ products, title, heading, description }: ServicesProp
                         key={`${product.id}-${absIndex}`} 
                         className="group relative flex flex-col bg-white rounded-[3rem] shadow-xl shadow-slate-200/40 border border-slate-100 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl overflow-hidden"
                       >
-                        <Link to="/products" className="absolute inset-0 z-10" />
                         {/* Service Image Area */}
                         <div className="relative h-48 sm:h-56 overflow-hidden bg-slate-100">
                           <img 
@@ -148,7 +147,7 @@ export const Services = ({ products, title, heading, description }: ServicesProp
                             </div>
                           </div>
 
-                          <p className="text-slate-500 mb-10 leading-relaxed text-sm font-medium flex-grow">
+                          <p className="text-slate-500 mb-10 leading-relaxed text-sm font-medium flex-grow whitespace-pre-line">
                             {product.description}
                           </p>
 

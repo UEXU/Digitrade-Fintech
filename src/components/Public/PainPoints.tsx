@@ -46,7 +46,7 @@ export const PainPoints = ({
                 <h3 className={`text-xl font-bold leading-tight ${expanded === idx ? 'text-white' : 'text-gray-900'}`}>{point.title}</h3>
                 {expanded === idx ? <Minus className="shrink-0 opacity-50" /> : <Plus className="shrink-0 opacity-50 text-blue-600" />}
               </div>
-              <p className={`text-sm leading-relaxed mb-4 ${expanded === idx ? 'text-blue-50 cursor-pointer' : 'text-gray-500'}`}>
+              <p className={`text-sm leading-relaxed mb-4 whitespace-pre-line ${expanded === idx ? 'text-blue-50 cursor-pointer' : 'text-gray-500'}`}>
                 {point.desc}
               </p>
               
@@ -59,7 +59,7 @@ export const PainPoints = ({
                     transition={{ duration: 0.3 }}
                     className="overflow-hidden"
                   >
-                    <div className="pt-4 border-t border-white/20 text-sm italic font-light text-blue-100/90 leading-relaxed">
+                    <div className="pt-4 border-t border-white/20 text-sm italic font-light text-blue-100/90 leading-relaxed whitespace-pre-line">
                       {point.more}
                     </div>
                   </motion.div>

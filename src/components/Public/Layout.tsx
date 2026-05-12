@@ -331,7 +331,10 @@ export const Footer = ({
   linkedin,
   wechat,
   linkedinIcon,
-  wechatIcon
+  wechatIcon,
+  copyrightText,
+  privacyText,
+  termsText
 }: { 
   logoText?: string; 
   logoSubtitle?: string; 
@@ -341,6 +344,9 @@ export const Footer = ({
   wechat?: string;
   linkedinIcon?: string;
   wechatIcon?: string;
+  copyrightText?: string;
+  privacyText?: string;
+  termsText?: string;
 }) => (
   <footer className="bg-slate-900 text-white py-20">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -368,7 +374,7 @@ export const Footer = ({
               </span>
             </div>
           </div>
-          <p className="text-gray-400 leading-relaxed mb-6">
+          <p className="text-gray-400 leading-relaxed mb-6 whitespace-pre-line">
             {description || '专注于跨境贸易本土化全链路赋能的智能服务中心。我们不仅是服务提供者，更是客户的海外增长合伙人。'}
           </p>
           <div className="flex gap-4">
@@ -392,18 +398,19 @@ export const Footer = ({
         <div>
           <h4 className="font-bold text-lg mb-8 text-white">快速入口</h4>
           <ul className="space-y-4 text-gray-400">
-            <li><a href="#services" className="hover:text-blue-400 transition-colors">服务体系</a></li>
-            <li><a href="#industries" className="hover:text-blue-400 transition-colors">行业方案</a></li>
-            <li><a href="#about" className="hover:text-blue-400 transition-colors">关于我们</a></li>
+            <li><a href="/#services" className="hover:text-blue-400 transition-colors">服务体系</a></li>
+            <li><a href="/#industries" className="hover:text-blue-400 transition-colors">行业方案</a></li>
+            <li><a href="/#how-it-works" className="hover:text-blue-400 transition-colors">服务流程</a></li>
+            <li><a href="/#about" className="hover:text-blue-400 transition-colors">关于我们</a></li>
             <li><Link to="/admin/login" className="hover:text-blue-400 transition-colors opacity-30 hover:opacity-100 text-[10px] mt-4 block">管理后台</Link></li>
           </ul>
         </div>
       </div>
       <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
-        <p>© 2026 数贸融出海服务中心. All rights reserved.</p>
+        <p>{copyrightText || `© ${new Date().getFullYear()} 数贸融出海服务中心. All rights reserved.`}</p>
         <div className="flex gap-8">
-          <a href="#" className="hover:text-white">隐私政策</a>
-          <a href="#" className="hover:text-white">服务条款</a>
+          <a href="#" className="hover:text-white">{privacyText || '隐私政策'}</a>
+          <a href="#" className="hover:text-white">{termsText || '服务条款'}</a>
         </div>
       </div>
     </div>

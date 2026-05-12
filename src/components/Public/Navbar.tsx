@@ -16,10 +16,14 @@ export const Navbar = ({ logoText, logoSubtitle, logoUrl, links }: { logoText?: 
   const defaultLinks = [
     { name: '服务体系', href: '/#services' },
     { name: '行业方案', href: '/#industries' },
+    { name: '服务流程', href: '/#how-it-works' },
     { name: '关于我们', href: '/#about' },
   ];
 
-  const navLinks = links && links.length > 0 ? links : defaultLinks;
+  const navLinks = (links && links.length > 0 ? links : defaultLinks).map((link: any) => ({
+    ...link,
+    href: link.href.startsWith('#') ? `/${link.href}` : link.href
+  }));
 
   return (
     <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm py-3' : 'bg-transparent py-5'}`}>
@@ -65,23 +69,20 @@ export const Navbar = ({ logoText, logoSubtitle, logoUrl, links }: { logoText?: 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
-            <a 
+            <Link 
               key={link.name} 
-              href={link.href} 
+              to={link.href} 
               className={`text-sm font-medium transition-colors hover:text-blue-600 ${isScrolled ? 'text-gray-600' : 'text-gray-200'}`}
             >
               {link.name}
-            </a>
+            </Link>
           ))}
-          <button 
-            onClick={() => {
-              const el = document.getElementById('contact');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}
+          <Link 
+            to="/#contact"
             className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
           >
             获取方案
-          </button>
+          </Link>
         </div>
 
         {/* Mobile Toggle */}
@@ -104,27 +105,22 @@ export const Navbar = ({ logoText, logoSubtitle, logoUrl, links }: { logoText?: 
           >
             <div className="flex flex-col p-4 gap-4">
               {navLinks.map((link) => (
-                <a 
+                <Link 
                   key={link.name} 
-                  href={link.href} 
+                  to={link.href} 
                   className="text-gray-600 font-medium py-2 border-b border-gray-50"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {link.name}
-                </a>
+                </Link>
               ))}
-              <button 
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setTimeout(() => {
-                    const el = document.getElementById('contact');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }, 100);
-                }}
-                className="bg-blue-600 text-white w-full py-3 rounded-xl font-semibold"
+              <Link 
+                to="/#contact"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="bg-blue-600 text-white w-full py-3 rounded-xl font-semibold text-center"
               >
                 获取方案
-              </button>
+              </Link>
             </div>
           </motion.div>
         )}
