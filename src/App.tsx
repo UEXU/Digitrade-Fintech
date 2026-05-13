@@ -3,15 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { HomePage } from './pages/HomePage';
-import { AdminLogin } from './pages/Admin/AdminLogin';
-import { AdminDashboard } from './pages/Admin/AdminDashboard';
-import { IndustryDetail } from './pages/IndustryDetail';
-import { ProductMatrix } from './pages/ProductMatrix';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { useLocation } from 'react-router-dom';
+
+const HomePage       = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
+const AdminLogin     = lazy(() => import('./pages/Admin/AdminLogin').then(m => ({ default: m.AdminLogin })));
+const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const IndustryDetail = lazy(() => import('./pages/IndustryDetail').then(m => ({ default: m.IndustryDetail })));
+const ProductMatrix  = lazy(() => import('./pages/ProductMatrix').then(m => ({ default: m.ProductMatrix })));
 
 const ScrollToHash = () => {
   const { hash } = useLocation();
@@ -35,6 +36,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ScrollToHash />
+      <Suspense fallback={null}>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
@@ -55,6 +57,7 @@ export default function App() {
         {/* Fallback */}
         <Route path="*" element={<HomePage />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }
