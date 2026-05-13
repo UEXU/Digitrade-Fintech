@@ -15,8 +15,8 @@ export const ProductMatrix = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: productsData } = await supabase.from('products').select('*').order('id');
-      const { data: configData } = await supabase.from('site_config').select('*');
+      const { data: productsData } = await supabase.from('products').select('id,title,description,price,image_url,features,stage').order('id');
+      const { data: configData } = await supabase.from('site_config').select('key,value');
       
       if (productsData && productsData.length > 0) {
         setProducts(productsData.map((p: any) => ({

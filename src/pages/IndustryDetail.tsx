@@ -16,7 +16,7 @@ export const IndustryDetail = () => {
   useEffect(() => {
     const fetchIndustry = async () => {
       try {
-        const { data: configData } = await supabase.from('site_config').select('*');
+        const { data: configData } = await supabase.from('site_config').select('key,value');
         if (configData) {
           const configObj = configData.reduce((acc: any, item: any) => {
             acc[item.key] = item.value;

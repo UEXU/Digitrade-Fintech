@@ -156,7 +156,7 @@ export const AdminDashboard = () => {
       }
 
       // 2. 获取配置
-      const { data: configData } = await supabase.from('site_config').select('*');
+      const { data: configData } = await supabase.from('site_config').select('key,value');
       if (configData) {
         const configObj = configData.reduce((acc: any, item: any) => {
           acc[item.key] = item.value;

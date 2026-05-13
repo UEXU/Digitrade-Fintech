@@ -85,12 +85,12 @@ export const HomePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data: configData, error: configError } = await supabase.from('site_config').select('*');
+        const { data: configData, error: configError } = await supabase.from('site_config').select('key,value');
         const { data: productsData, error: productsError } = await supabase
           .from('products')
-          .select('*')
+          .select('id,title,description,price,image_url,features,stage')
           .order('id')
-          .limit(20); 
+          .limit(20);
 
         if (configError || productsError) {
           const err = configError || productsError;
