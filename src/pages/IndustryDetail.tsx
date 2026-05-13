@@ -16,7 +16,12 @@ export const IndustryDetail = () => {
   useEffect(() => {
     const fetchIndustry = async () => {
       try {
-        const { data: configData } = await supabase.from('site_config').select('key,value');
+        const { data: configData } = await supabase.from('site_config').select('key,value').in('key', [
+          'industries','logo_url','company_logo_text','company_logo_subtitle','navbar_links',
+          'ind_feat1_title','ind_feat1_desc','ind_feat2_title','ind_feat2_desc','ind_feat3_title','ind_feat3_desc',
+          'footer_description','footer_copyright','footer_privacy_text','footer_terms_text',
+          'social_linkedin','social_wechat','social_linkedin_icon','social_wechat_icon',
+        ]);
         if (configData) {
           const configObj = configData.reduce((acc: any, item: any) => {
             acc[item.key] = item.value;

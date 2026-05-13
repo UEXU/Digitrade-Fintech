@@ -85,7 +85,20 @@ export const HomePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data: configData, error: configError } = await supabase.from('site_config').select('key,value');
+        const { data: configData, error: configError } = await supabase.from('site_config').select('key,value').in('key', [
+          'hero_badge_text','hero_title','hero_subtitle','hero_image_url',
+          'hero_btn_primary','hero_btn_secondary','hero_stat_1','hero_stat_2','hero_stat_3',
+          'pain_points_title','pain_points_heading','pain_points',
+          'services_title','services_badge_text','services_description',
+          'service_path_title','service_path_heading','service_steps',
+          'about_title','about_badge_text','about_content','about_features','about_image_url','about_stat_value','about_stat_label',
+          'industries_title','industries_heading','industries',
+          'products_title','products_subtitle',
+          'contact_title','contact_badge_text','contact_heading','contact_form_text','contact_items','contact_form_fields',
+          'logo_url','company_logo_text','company_logo_subtitle','navbar_links','seo_description',
+          'footer_description','footer_copyright','footer_privacy_text','footer_terms_text',
+          'social_linkedin','social_wechat','social_linkedin_icon','social_wechat_icon',
+        ]);
         const { data: productsData, error: productsError } = await supabase
           .from('products')
           .select('id,title,description,price,image_url,features,stage')

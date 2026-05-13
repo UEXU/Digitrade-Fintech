@@ -16,7 +16,11 @@ export const ProductMatrix = () => {
   useEffect(() => {
     const fetchData = async () => {
       const { data: productsData } = await supabase.from('products').select('id,title,description,price,image_url,features,stage').order('id');
-      const { data: configData } = await supabase.from('site_config').select('key,value');
+      const { data: configData } = await supabase.from('site_config').select('key,value').in('key', [
+        'products_title','products_subtitle','logo_url','company_logo_text','company_logo_subtitle','navbar_links',
+        'footer_description','footer_copyright','footer_privacy_text','footer_terms_text',
+        'social_linkedin','social_wechat','social_linkedin_icon','social_wechat_icon',
+      ]);
       
       if (productsData && productsData.length > 0) {
         setProducts(productsData.map((p: any) => ({
