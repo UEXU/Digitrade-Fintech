@@ -198,7 +198,7 @@ export const Contact = ({
       const submissionData = {
         name: formData.name || '',
         email: formData.email || '',
-        phone: formData.phone || '',
+        phone: formData.phone || formData.mobile || '',
         company: formData.company || '',
         industry: formData.industry || '',
         requirements: formData.requirements || '',
