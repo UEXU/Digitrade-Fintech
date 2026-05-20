@@ -87,7 +87,10 @@ export const HomePage = () => {
       try {
         const { data: configData, error: configError } = await supabase.from('site_config').select('key,value').in('key', [
           'hero_badge_text','hero_title','hero_subtitle','hero_image_url',
-          'hero_btn_primary','hero_btn_secondary','hero_stat_1','hero_stat_2','hero_stat_3',
+          'hero_btn_1_text','hero_btn_2_text',
+          'hero_stat_1_value','hero_stat_1_label',
+          'hero_stat_2_value','hero_stat_2_label',
+          'hero_stat_3_value','hero_stat_3_label',
           'pain_points_title','pain_points_heading','pain_points',
           'services_title','services_badge_text','services_description',
           'service_path_title','service_path_heading','service_steps',
