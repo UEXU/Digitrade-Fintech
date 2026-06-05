@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from 'react-i18next';
 import { Navbar } from '../components/Public/Navbar';
 import { Hero } from '../components/Public/Hero';
 import { PainPoints } from '../components/Public/PainPoints';
@@ -9,6 +10,7 @@ import { Industries, About, Contact, Footer } from '../components/Public/Layout'
 import { ShieldCheck, Users, TrendingUp, Building2, Globe, Zap } from 'lucide-react';
 import { DEFAULT_PRODUCTS } from '../constants';
 import { safeJsonParse } from '../lib/utils';
+import { useTranslatedSiteConfig, useTranslatedProducts } from '../i18n/useTranslatedSiteConfig';
 
 const DEFAULT_CONFIG = {
   company_logo_text: '数贸融澳洲出海服务中心',
@@ -65,10 +67,14 @@ const DEFAULT_CONFIG = {
 };
 
 export const HomePage = () => {
+  const { t } = useTranslation();
   const [siteConfig, setSiteConfig] = useState<any>({});
   const [products, setProducts] = useState<any[]>(DEFAULT_PRODUCTS);
   const [loading, setLoading] = useState(true);
   const [isConfigured, setIsConfigured] = useState(true);
+
+  const translatedConfig = useTranslatedSiteConfig(siteConfig);
+  const translatedProducts = useTranslatedProducts(products);
 
   const fallbackSteps = [
     { title: '初步咨询', desc: 'CONSULTATION', icon: 'MessageSquare' },
@@ -80,7 +86,7 @@ export const HomePage = () => {
     { title: '增长赋能', desc: 'GROWTH EMPOWERMENT', icon: 'Zap' },
   ];
   
-  const steps = safeJsonParse(siteConfig.service_steps, fallbackSteps);
+  const steps = safeJsonParse(translatedConfig.service_steps, fallbackSteps);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -112,6 +118,7 @@ export const HomePage = () => {
           const err = configError || productsError;
           console.error('CRITICAL: Supabase connection failed. Check your Secret keys.', err);
           setIsConfigured(false);
+          setSiteConfig(DEFAULT_CONFIG);
           setLoading(false);
           return;
         }
@@ -177,7 +184,7 @@ export const HomePage = () => {
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white space-y-6">
         <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
         <div className="text-blue-400 font-bold tracking-[0.3em] uppercase text-xs animate-pulse">
-          Digitrade Fintech Loading...
+          {t('loading.label')}
         </div>
       </div>
     );
@@ -185,78 +192,78 @@ export const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
-      <Navbar 
-        logoText={siteConfig.company_logo_text}
-        logoSubtitle={siteConfig.company_logo_subtitle}
-        logoUrl={siteConfig.logo_url}
-        links={safeJsonParse(siteConfig.navbar_links)}
+      <Navbar
+        logoText={translatedConfig.company_logo_text}
+        logoSubtitle={translatedConfig.company_logo_subtitle}
+        logoUrl={translatedConfig.logo_url}
+        links={safeJsonParse(translatedConfig.navbar_links)}
       />
       <main>
-        <Hero 
-          title={siteConfig.hero_title} 
-          subtitle={siteConfig.hero_subtitle} 
-          bgImage={siteConfig.hero_image_url}
-          btn1Text={siteConfig.hero_btn_1_text}
-          btn2Text={siteConfig.hero_btn_2_text}
-          badgeText={siteConfig.hero_badge_text}
+        <Hero
+          title={translatedConfig.hero_title}
+          subtitle={translatedConfig.hero_subtitle}
+          bgImage={translatedConfig.hero_image_url}
+          btn1Text={translatedConfig.hero_btn_1_text}
+          btn2Text={translatedConfig.hero_btn_2_text}
+          badgeText={translatedConfig.hero_badge_text}
           stats={[
-            { value: siteConfig.hero_stat_1_value, label: siteConfig.hero_stat_1_label },
-            { value: siteConfig.hero_stat_2_value, label: siteConfig.hero_stat_2_label },
-            { value: siteConfig.hero_stat_3_value, label: siteConfig.hero_stat_3_label },
+            { value: translatedConfig.hero_stat_1_value, label: translatedConfig.hero_stat_1_label },
+            { value: translatedConfig.hero_stat_2_value, label: translatedConfig.hero_stat_2_label },
+            { value: translatedConfig.hero_stat_3_value, label: translatedConfig.hero_stat_3_label },
           ]}
         />
-        <PainPoints 
-          data={safeJsonParse(siteConfig.pain_points)} 
-          title={siteConfig.pain_points_title}
-          heading={siteConfig.pain_points_heading}
+        <PainPoints
+          data={safeJsonParse(translatedConfig.pain_points)}
+          title={translatedConfig.pain_points_title}
+          heading={translatedConfig.pain_points_heading}
         />
-        <Services 
-          products={products} 
-          title={siteConfig.services_badge_text}
-          heading={siteConfig.services_title}
-          description={siteConfig.services_description}
+        <Services
+          products={translatedProducts as any}
+          title={translatedConfig.services_badge_text}
+          heading={translatedConfig.services_title}
+          description={translatedConfig.services_description}
         />
-        <Industries 
-          data={safeJsonParse(siteConfig.industries)} 
-          title={siteConfig.industries_title}
-          heading={siteConfig.industries_heading}
+        <Industries
+          data={safeJsonParse(translatedConfig.industries)}
+          title={translatedConfig.industries_title}
+          heading={translatedConfig.industries_heading}
         />
-        <ServicePath 
-          title={siteConfig.service_path_title} 
-          heading={siteConfig.service_path_heading} 
-          steps={steps} 
+        <ServicePath
+          title={translatedConfig.service_path_title}
+          heading={translatedConfig.service_path_heading}
+          steps={steps}
         />
-        <About 
-          badge={siteConfig.about_badge_text}
-          title={siteConfig.about_title} 
-          content={siteConfig.about_content}
-          imageUrl={siteConfig.about_image_url}
-          features={safeJsonParse(siteConfig.about_features)}
-          statValue={siteConfig.about_stat_value}
-          statLabel={siteConfig.about_stat_label}
+        <About
+          badge={translatedConfig.about_badge_text}
+          title={translatedConfig.about_title}
+          content={translatedConfig.about_content}
+          imageUrl={translatedConfig.about_image_url}
+          features={safeJsonParse(translatedConfig.about_features)}
+          statValue={translatedConfig.about_stat_value}
+          statLabel={translatedConfig.about_stat_label}
         />
 
-        <Contact 
-          badge={siteConfig.contact_badge_text}
-          title={siteConfig.contact_title}
-          heading={siteConfig.contact_heading}
-          formText={siteConfig.contact_form_text}
-          contactItems={safeJsonParse(siteConfig.contact_items)}
-          formFields={safeJsonParse(siteConfig.contact_form_fields)}
+        <Contact
+          badge={translatedConfig.contact_badge_text}
+          title={translatedConfig.contact_title}
+          heading={translatedConfig.contact_heading}
+          formText={translatedConfig.contact_form_text}
+          contactItems={safeJsonParse(translatedConfig.contact_items)}
+          formFields={safeJsonParse(translatedConfig.contact_form_fields)}
         />
       </main>
-      <Footer 
-        logoText={siteConfig.company_logo_text} 
-        logoSubtitle={siteConfig.company_logo_subtitle}
-        logoUrl={siteConfig.logo_url} 
-        description={siteConfig.footer_description}
-        linkedin={siteConfig.social_linkedin}
-        wechat={siteConfig.social_wechat}
-        linkedinIcon={siteConfig.social_linkedin_icon}
-        wechatIcon={siteConfig.social_wechat_icon}
-        copyrightText={siteConfig.footer_copyright}
-        privacyText={siteConfig.footer_privacy_text}
-        termsText={siteConfig.footer_terms_text}
+      <Footer
+        logoText={translatedConfig.company_logo_text}
+        logoSubtitle={translatedConfig.company_logo_subtitle}
+        logoUrl={translatedConfig.logo_url}
+        description={translatedConfig.footer_description}
+        linkedin={translatedConfig.social_linkedin}
+        wechat={translatedConfig.social_wechat}
+        linkedinIcon={translatedConfig.social_linkedin_icon}
+        wechatIcon={translatedConfig.social_wechat_icon}
+        copyrightText={translatedConfig.footer_copyright}
+        privacyText={translatedConfig.footer_privacy_text}
+        termsText={translatedConfig.footer_terms_text}
       />
     </div>
   );

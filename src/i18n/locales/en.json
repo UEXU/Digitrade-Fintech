@@ -1,0 +1,87 @@
+{
+  "navbar": {
+    "services": "Services",
+    "industries": "Industries",
+    "howItWorks": "Process",
+    "about": "About",
+    "cta": "Get Proposal",
+    "logoFallback": "Digitrade Fintech"
+  },
+  "hero": {
+    "badge": "Australia Market Entry Service Hub",
+    "title": "Helping Chinese Enterprises\nLand and Grow in Australia",
+    "subtitle": "From compliance and market entry to commercial strategy, we fill the gap in post-landing growth enablement — serving as your external Chief Growth Officer (CGO) to help you take root in the Australian market.",
+    "btn1": "Get a Custom Plan",
+    "btn2": "Explore Services",
+    "stats": {
+      "stat1Value": "15+ Years",
+      "stat1Label": "Sino-Australia Trade",
+      "stat2Value": "500+",
+      "stat2Label": "Enterprise Cases",
+      "stat3Value": "60%",
+      "stat3Label": "Faster Market Entry"
+    }
+  },
+  "painPoints": {
+    "title": "Core Pain Points",
+    "heading": "Why does expansion into Australia so often fail to take root?"
+  },
+  "services": {
+    "title": "Service Architecture",
+    "heading": "A Three-Stage, Six-Dimension Market Entry Program",
+    "description": "We distill three tiers of delivery standards for the distinct challenges enterprises face at each stage of entering Australia — from initial decision-making to mature-state resource integration, with consistent advisory-grade support.",
+    "moduleLabel": "MODULE",
+    "baseRateLabel": "Base Rate",
+    "keyScopeLabel": "Key Scope",
+    "phases": {
+      "phase1Title": "Phase 01: Compliant Landing",
+      "phase1Desc": "Entry & Landing - Ensure legal operations and reduce entry risk",
+      "phase2Title": "Phase 02: Sales Growth",
+      "phase2Desc": "Growth & Operations - Localize the brand and build sales channels",
+      "phase3Title": "Phase 03: Stable Operations",
+      "phase3Desc": "Scale & Ecosystem - Financial compliance and deep government/resource integration",
+      "phaseNTitleTemplate": "Phase 0{{n}}: Additional Programs",
+      "phaseNDesc": "Expansion - Continuously refined market entry programs"
+    }
+  },
+  "servicePath": {
+    "title": "Service Path",
+    "heading": "Full-Cycle Sino-Australia Landing & Growth"
+  },
+  "industries": {
+    "title": "Industry Solutions",
+    "heading": "Focused on Queensland's Strategic Industries"
+  },
+  "about": {
+    "badge": "About Digitrade",
+    "title": "Your Strategic Partner for\nLanding and Growth in Australia",
+    "statValue": "10+",
+    "statLabel": "Sino-Australia Experts"
+  },
+  "contact": {
+    "badge": "Contact Us",
+    "title": "Begin Your\nAustralia Expansion",
+    "formText": "Fill out the form and our Sino-Australia expert team will provide a complimentary initial consultation and compliance risk assessment.",
+    "submitting": "Submitting...",
+    "submit": "Get My Plan",
+    "alertSuccess": "Your enquiry has been received. We'll be in touch shortly.",
+    "alertErrorTemplate": "Submission encountered a technical issue: {{message}}. If this persists, please contact us directly using the details below."
+  },
+  "footer": {
+    "description": "An intelligent service hub focused on full-stack cross-border trade localization. We are not just a service provider — we are your overseas growth partner.",
+    "quickLinks": "Quick Links",
+    "wechatLabel": "WeChat ID:",
+    "adminEntry": "Admin",
+    "copyrightTemplate": "© {{year}} Digitrade Fintech. All rights reserved.",
+    "privacy": "Privacy",
+    "terms": "Terms"
+  },
+  "loading": {
+    "label": "Digitrade Fintech Loading..."
+  },
+  "languageSwitcher": {
+    "zh": "中",
+    "en": "EN",
+    "aria": "Switch language"
+  }
+}
