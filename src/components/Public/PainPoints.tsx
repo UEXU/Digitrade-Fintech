@@ -2,16 +2,20 @@ import React, { useState } from 'react';
 import { getLucideIcon } from '../../lib/icons';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Minus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-export const PainPoints = ({ 
-  data, 
-  title = "核心痛点分析", 
-  heading = "为什么出海澳洲总是“水土不服”？" 
-}: { 
+export const PainPoints = ({
+  data,
+  title,
+  heading
+}: {
   data?: any[],
   title?: string,
   heading?: string
 }) => {
+  const { t } = useTranslation();
+  const resolvedTitle = title || t('painPoints.title');
+  const resolvedHeading = heading || t('painPoints.heading');
   const [expanded, setExpanded] = useState<number | null>(null);
 
   const defaultPoints = [
@@ -27,8 +31,8 @@ export const PainPoints = ({
     <section id="pain-points" className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-blue-600 font-bold tracking-widest uppercase text-sm mb-3">{title}</h2>
-          <p className="text-3xl md:text-4xl font-bold text-gray-900">{heading}</p>
+          <h2 className="text-blue-600 font-bold tracking-widest uppercase text-sm mb-3">{resolvedTitle}</h2>
+          <p className="text-3xl md:text-4xl font-bold text-gray-900">{resolvedHeading}</p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">

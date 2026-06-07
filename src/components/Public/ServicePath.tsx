@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { getLucideIcon } from '../../lib/icons';
+import { useTranslation } from 'react-i18next';
 
 interface Step {
   title: string;
@@ -16,6 +17,7 @@ interface ServicePathProps {
 
 
 export const ServicePath = ({ title, heading, steps }: ServicePathProps) => {
+  const { t } = useTranslation();
   const defaultSteps = [
     { title: '进入市场', desc: 'Entry', icon: 'Globe' },
     { title: '合规落地', desc: 'Setup', icon: 'ShieldCheck' },
@@ -31,10 +33,10 @@ export const ServicePath = ({ title, heading, steps }: ServicePathProps) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-20">
           <h2 className="text-blue-600 font-bold tracking-widest uppercase text-sm mb-3">
-            {title || '服务路径'}
+            {title || t('servicePath.title')}
           </h2>
           <p className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
-            {heading || '中澳落地赋能全景全周期'}
+            {heading || t('servicePath.heading')}
           </p>
         </div>
 

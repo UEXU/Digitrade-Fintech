@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface HeroProps {
   title?: string;
@@ -14,10 +15,12 @@ interface HeroProps {
 }
 
 export const Hero = ({ title, subtitle, bgImage, btn1Text, btn2Text, badgeText, stats }: HeroProps) => {
+  const { t } = useTranslation();
+
   const defaultStats = [
-    { value: '15+ 年', label: '中澳贸易深耕' },
-    { value: '500+', label: '服务企业案例' },
-    { value: '60%', label: '落地效率提升' }
+    { value: t('hero.stats.stat1Value'), label: t('hero.stats.stat1Label') },
+    { value: t('hero.stats.stat2Value'), label: t('hero.stats.stat2Label') },
+    { value: t('hero.stats.stat3Value'), label: t('hero.stats.stat3Label') },
   ];
 
   const displayStats = stats && stats.filter(s => s.value && s.label).length > 0 ? stats : defaultStats;
@@ -25,9 +28,9 @@ export const Hero = ({ title, subtitle, bgImage, btn1Text, btn2Text, badgeText, 
   return (
     <section className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-slate-900">
       <div className="absolute inset-0 z-0">
-        <img 
-          src={bgImage || "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&q=80&w=1920"} 
-          alt="Sydney" 
+        <img
+          src={bgImage || "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&q=80&w=1920"}
+          alt="Sydney"
           className="w-full h-full object-cover opacity-40"
           referrerPolicy="no-referrer"
         />
@@ -42,32 +45,32 @@ export const Hero = ({ title, subtitle, bgImage, btn1Text, btn2Text, badgeText, 
             transition={{ duration: 0.6 }}
           >
             <span className="inline-block px-4 py-1.5 rounded-full bg-blue-600/20 text-blue-400 text-xs font-bold tracking-widest uppercase mb-6 border border-blue-600/30">
-              {badgeText || '澳洲出海一站式服务中心'}
+              {badgeText || t('hero.badge')}
             </span>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.1] mb-8 whitespace-pre-line">
-              {title || '让中国企业在澳洲\n真正落地与增长'}
+              {title || t('hero.title')}
             </h1>
             <p className="text-lg md:text-xl text-gray-300 mb-10 leading-relaxed whitespace-pre-line">
-              {subtitle || '从合规准入到商业策略，我们填补“落地后增长赋能”的市场空白，担任您的外部首席增长官（CGO），助您在澳洲市场扎根。'}
+              {subtitle || t('hero.subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link 
+              <Link
                 to="/#contact"
                 className="bg-blue-600 text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2 group shadow-xl shadow-blue-600/30"
               >
-                {btn1Text || '获取定制方案'}
+                {btn1Text || t('hero.btn1')}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
-              <Link 
+              <Link
                 to="/#services"
                 className="bg-white/10 backdrop-blur-md text-white border border-white/20 px-8 py-4 rounded-full font-bold text-lg hover:bg-white/20 transition-all text-center"
               >
-                {btn2Text || '查看服务矩阵'}
+                {btn2Text || t('hero.btn2')}
               </Link>
             </div>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8, duration: 1 }}
