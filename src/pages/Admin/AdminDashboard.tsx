@@ -588,6 +588,31 @@ export const AdminDashboard = () => {
                     </button>
           </header>
 
+          {/* SUB-SITE LAUNCHER: Proposal Architect (proposal.auservice.com.au) */}
+          <div className="bg-white rounded-[40px] p-6 md:p-8 shadow-sm border border-slate-100 mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex items-start gap-5">
+              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-600/20">
+                <FileText className="h-7 w-7 text-white" />
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-gray-900 text-base md:text-lg">出海提案智能生成系统</h3>
+                  <span className="px-2 py-0.5 rounded text-[9px] bg-indigo-50 text-indigo-600 font-mono tracking-wider">SUB-SITE</span>
+                </div>
+                <p className="text-gray-500 text-xs md:text-sm leading-relaxed max-w-xl">
+                  AI 辅助生成中资企业出海澳洲专项建议书（合规剖析 + 风险管控 + A4 打印导出 PDF）。点击在新标签打开，需用同账号再登一次。
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => window.open(import.meta.env.VITE_PROPOSAL_URL ?? 'https://proposal.auservice.com.au', '_blank', 'noopener,noreferrer')}
+              className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-600/20 shrink-0"
+            >
+              <Zap size={18} /> 进入提案系统
+            </button>
+          </div>
+
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* NAVBAR TAB */}
             {activeTab === 'navbar' && (
